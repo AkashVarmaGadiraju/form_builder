@@ -293,7 +293,7 @@ const FieldGroup: FunctionComponent = () => {
   let tableData = [];
   return (
     <main className="w-[90%] h-[100%] flex flex-col items-start justify-start box-border max-w-full mx-auto pb-auto pt-16">
-      <section className="self-stretch flex flex-col items-start justify-start gap-[21px] max-w-full">
+      <section className="self-stretch flex flex-col items-start justify-start gap-[21px] max-w-full h-[95%]">
         <div className="self-stretch flex flex-col items-start justify-start gap-[17px] max-w-full text-left text-11xl text-darkslateblue">
           <h1 className="m-0 relative font-semibold font-merriweather-sans inline-block text-2xl">
             Field Group
@@ -425,7 +425,7 @@ const FieldGroup: FunctionComponent = () => {
         </div>
         <Dialog>
           {filteredItems.length <= 0 ? (
-            <div className="self-stretch rounded-3xs bg-gray-200 box-border flex flex-col items-center justify-center gap-[16px] max-w-full text-center text-base text-darkslateblue font-noto-sans border-[1px] border-dashed border-seagreen h-[500px]">
+            <div className="self-stretch rounded-3xs bg-gray-200 box-border flex flex-col items-center justify-center gap-[16px] max-w-full text-center text-base text-darkslateblue font-noto-sans border-[1px] border-dashed border-seagreen h-[100%]">
               <div className="w-full relative rounded-3xs bg-gray-200 box-border hidden max-w-full border-[1px] border-dashed border-seagreen" />
               <div className="w-[352px] flex flex-row items-start justify-center max-w-full">
                 <img

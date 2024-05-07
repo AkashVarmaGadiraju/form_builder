@@ -260,7 +260,7 @@ const FormList: FunctionComponent = () => {
   let tableData = [];
   return (
     <main className="w-[90%] h-[100%] flex flex-col items-start justify-start box-border max-w-full mx-auto pb-auto pt-24 mq825:p-[20px] mq825:box-border mq1250:p-[20px] mq1250:box-border">
-      <section className="self-stretch flex flex-col items-start justify-start gap-[43px] max-w-full mq825:gap-[21px]">
+      <section className="self-stretch flex flex-col items-start justify-start gap-[43px] max-w-full mq825:gap-[21px] h-[95%]">
         <div className="self-stretch flex flex-col items-start justify-start gap-[17px] max-w-full text-left text-11xl text-darkslateblue font-roboto">
           <h1 className="m-0 relative text-inherit font-semibold font-inherit inline-block min-w-[127px] mq450:text-lg mq825:text-5xl">
             Form List
