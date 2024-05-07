@@ -259,7 +259,7 @@ const Models: FunctionComponent = () => {
 	let tableData = [];
 	return (
 		<main className="w-[90%] h-[100%] flex flex-col items-start justify-start box-border max-w-full mx-auto pb-auto pt-24 mq825:p-[20px] mq825:box-border mq1250:p-[20px] mq1250:box-border">
-			<section className="self-stretch flex flex-col items-start justify-start gap-[21px] max-w-full mq825:gap-[21px]">
+			<section className="self-stretch flex flex-col items-start justify-start gap-[21px] max-w-full h-[95%]">
 				<div className="self-stretch flex flex-col items-start justify-start gap-[17px] max-w-full text-left text-11xl text-darkslateblue font-roboto">
 					<h1 className="m-0 relative text-inherit font-semibold font-inherit inline-block min-w-[127px] mq450:text-lg mq825:text-5xl">
 						Model List
@@ -366,7 +366,7 @@ const Models: FunctionComponent = () => {
 				</div>
 				<Dialog>
 					{filteredItems.length <= 0 ? (
-						<div className="self-stretch rounded-3xs bg-gray-200 box-border flex flex-col items-center justify-start pt-[240px] pb-[245px] pr-5 pl-[21px] gap-[16px] max-w-full text-center text-base text-darkslateblue font-noto-sans border-[1px] border-dashed border-seagreen mq450:pt-[120px] mq450:pb-[118px] mq450:box-border mq825:pt-[184px] mq825:pb-[181px] mq825:box-border">
+						<div className="self-stretch rounded-3xs bg-gray-200 box-border flex flex-col items-center justify-start pt-[240px] pb-[245px] pr-5 pl-[21px] gap-[16px] max-w-full text-center text-base text-darkslateblue font-noto-sans border-[1px] border-dashed border-seagreen h-full">
 							<div className="w-[1471px] h-[772px] relative rounded-3xs bg-gray-200 box-border hidden max-w-full border-[1px] border-dashed border-seagreen" />
 							<div className="w-[352.4px] flex flex-row items-start justify-center max-w-full">
 								<img className="h-12 w-12 relative rounded-9xl z-[1]" loading="lazy" alt="" src="/featured-icon.svg" />
