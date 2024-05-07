@@ -102,14 +102,41 @@ const EditModel: FunctionComponent = () => {
 		}
 	}
 
+	const move = (source: any[], destination: any[], droppableSource: Record<string, any>, droppableDestination: Record<string, any>) => {
+		const sourceClone = Array.from(source);
+		const destClone = Array.from(destination);
+		const [removed] = sourceClone.splice(droppableSource.index, 1);
+
+		destClone.splice(droppableDestination.index, 0, removed);
+
+		const result: Record<string, any> = {};
+		result[droppableSource.droppableId] = sourceClone;
+		result[droppableDestination.droppableId] = destClone;
+
+		return result;
+	};
+
 	const onDragEnd = (result: any) => {
-		if (!result.destination) return;
+		const { source, destination } = result;
+		if (!destination) return;
 
-		const items = Array.from(availableFields);
-		const [reorderedItem] = items.splice(result.source.index, 1);
-		items.splice(result.destination.index, 0, reorderedItem);
+		if (source.droppableId === destination.droppableId) {
+			const items = Array.from(availableFields);
+			const [reorderedItem] = items.splice(source.index, 1);
+			items.splice(destination.index, 0, reorderedItem);
 
-		setAvailableFields(items);
+			setAvailableFields(items);
+		} else if (source.droppableId === "availableFields") {
+			let result = move(availableFields, selectedFields, source, destination);
+
+			setAvailableFields(result.availableFields);
+			setSelectedFields(result.selectedFields);
+		} else if (source.droppableId === "selectedFields") {
+			let result = move(selectedFields, availableFields, source, destination);
+
+			setAvailableFields(result.availableFields);
+			setSelectedFields(result.selectedFields);
+		}
 	};
 	return (
 		<div className="bg-dot-black/[0.2] h-full px-10">
@@ -119,7 +146,7 @@ const EditModel: FunctionComponent = () => {
 			<div className="flex flex-row mt-10 w-full h-[86%] gap-3">
 				<DragDropContext onDragEnd={onDragEnd}>
 					{!chosenField ? (
-						<Droppable droppableId="unselect">
+						<Droppable droppableId="availableFields">
 							{(provided) => {
 								return (
 									<div
@@ -300,6 +327,7 @@ const EditModel: FunctionComponent = () => {
 																{...provided.draggableProps}
 																{...provided.dragHandleProps}
 																ref={provided.innerRef}
+																draggable={true}
 																className="field w-full h-[46px] p-4 flex items-center gap-2.5 flex-shrink-0 rounded-lg border border-dashed border-[#B79848] bg-[#FFFBEB] text-green-800 font-bold font-sans text-sm justify-start"
 															>
 																<div className="flex flex-row gap-3 w-full">
@@ -707,46 +735,40 @@ const EditModel: FunctionComponent = () => {
 							</div>
 						</div>
 					)}
-					<div className="flex-grow h-full flex-shrink-0 rounded-lg border border-solid border-[#C0E6DD] bg-[#F7FAFF] p-20 gap-3 flex flex-col">
-						{selectedFields.map((e: any, i: number) => {
+					<Droppable droppableId="selectedFields">
+						{(provided) => {
 							return (
-								<Button
-									className="w-full h-[50px] p-4 flex items-center gap-2.5 flex-shrink-0 rounded-lg border border-dashed border-seagreen bg-gray-200 text-green-800 font-bold font-sans text-sm justify-between "
-									disableAnimation={false}
-									disableRipple={true}
-									draggable={"true"}
-									onDragStart={(event) => {
-										dragStart(event, e.id, "move");
-									}}
-									onDragOver={(event) => {
-										allowDrop(event);
-									}}
-									onDrop={(event) => {
-										dropOnChild(event, i);
-									}}
-									onClick={() => {
-										setChosenField(e);
-									}}
+								<div
+									className="flex-grow h-full flex-shrink-0 rounded-lg border border-solid border-[#C0E6DD] bg-[#F7FAFF] p-20 gap-3 flex flex-col"
+									ref={provided.innerRef}
+									{...provided.droppableProps}
 								>
-									<div className="flex flex-row gap-3 w-full">
-										<CarbonIcon /> {e.name}
+									{selectedFields.map((e: any, index: number) => {
+										return (
+											<Draggable key={e.id} draggableId={e.id.toString()} index={index}>
+												{(provided) => (
+													<div
+														className="w-full h-[50px] p-4 flex items-center gap-2.5 flex-shrink-0 rounded-lg border border-dashed border-seagreen bg-gray-200 text-green-800 font-bold font-sans text-sm justify-between "
+														{...provided.draggableProps}
+														{...provided.dragHandleProps}
+														ref={provided.innerRef}
+													>
+														<div className="flex flex-row gap-3 w-full">
+															<CarbonIcon /> {e.name}
+														</div>
+													</div>
+												)}
+											</Draggable>
+										);
+									})}
+									<div>
+										<div></div>
+										<div className="w-[100%] h-[50px] flex-shrink-0 rounded-lg bg-[#ebedf1] "></div>
 									</div>
-								</Button>
+								</div>
 							);
-						})}
-						<div>
-							<div></div>
-							<div
-								className="w-[100%] h-[50px] flex-shrink-0 rounded-lg bg-[#ebedf1] "
-								onDragOver={(event) => {
-									allowDrop(event);
-								}}
-								onDrop={(event) => {
-									dropOnChild(event, selectedFields.length);
-								}}
-							></div>
-						</div>
-					</div>
+						}}
+					</Droppable>
 				</DragDropContext>
 			</div>
 		</div>
