@@ -9,8 +9,8 @@ import { ReactComponent as WhiteCancelIcon } from "../../assets/grommet-icons_cl
 
 const ChooseModal = () => {
   const ModalCard = () => (
-    <div className="w-full max-w-[400px] rounded-xl shadow-lg shadow-neutral-300 p-4 flex flex-col gap-3 border-3 border-[#ccc] hover:border-[#3b8662] transition-colors">
-      <div className="w-full h-40 rounded-xl overflow-hidden">
+    <div className="w-full max-w-[400px] rounded-xl shadow-lg shadow-neutral-300 p-[24px] flex flex-col gap-3 border-1 hover:border-3 border-[#ccc] hover:border-[#3b8662] transition-colors">
+      <div className="w-full h-40 rounded-lg overflow-hidden">
         <img
           src="/carrd-img.svg"
           alt="card-img"
@@ -42,15 +42,15 @@ const ChooseModal = () => {
 
   return (
     <div className="w-full h-full flex flex-col gap-4">
-      <div className="flex flex-col">
-        <h1 className=" text-[30px] text-blue-950 font-bold">
-          Choose an Existing Model
-        </h1>
-        <p className=" text-sm text-gray-500 font-medium">
-          Choose from our Template Library to set a parent child hierarchy.
-        </p>
-      </div>
-      <div className="w-full flex flex-wrap gap-4 p-6 shadow-lg shadow-neutral-300 rounded-xl">
+      <div className="w-full grid grid-cols-4 gap-4">
+        <ModalCard />
+        <ModalCard />
+        <ModalCard />
+        <ModalCard />
+        <ModalCard />
+        <ModalCard />
+        <ModalCard />
+        <ModalCard />
         <ModalCard />
         <ModalCard />
         <ModalCard />
