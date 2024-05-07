@@ -13,6 +13,7 @@ import { BreadcrumbItem, Button, Checkbox } from "@nextui-org/react";
 import backgroundImage from "../../assets/Dot Grid.svg";
 import { Breadcrumb, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "../../components/util-components/ui/breadcrumbs";
 import { swapElements } from "../../utils/util";
+import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 
 const EditModel: FunctionComponent = () => {
 	const [selectedFields, setSelectedFields]: [any, any] = useState([]);
@@ -59,6 +60,111 @@ const EditModel: FunctionComponent = () => {
 			id: 10,
 		},
 	]);
+
+	interface Item {
+		id: string;
+		content: string;
+	}
+
+	const menu = {
+		width: "35px",
+		height: "5px",
+		backgroundColor: "black",
+		margin: "6px 0",
+	};
+
+	// fake data generator
+	const getItems = (count: number, offset = 0): Item[] =>
+		Array.from({ length: count }, (_, k) => k).map((k) => ({
+			id: `item-${k + offset}`,
+			content: `item ${k + offset}`,
+		}));
+
+	// a little function to help us with reordering the result
+	const reorder = (list: Item[], startIndex: number, endIndex: number): Item[] => {
+		const result = Array.from(list);
+		const [removed] = result.splice(startIndex, 1);
+		result.splice(endIndex, 0, removed);
+
+		return result;
+	};
+
+	/**
+	 * Moves an item from one list to another list.
+	 */
+	const move = (
+		source: Item[],
+		destination: Item[],
+		droppableSource: { droppableId: string; index: number },
+		droppableDestination: { droppableId: string; index: number }
+	): { [key: string]: Item[] } => {
+		const sourceClone = Array.from(source);
+		const destClone = Array.from(destination);
+		const [removed] = sourceClone.splice(droppableSource.index, 1);
+
+		destClone.splice(droppableDestination.index, 0, removed);
+
+		const result: { [key: string]: Item[] } = {};
+		result[droppableSource.droppableId] = sourceClone;
+		result[droppableDestination.droppableId] = destClone;
+
+		return result;
+	};
+
+	const grid = 8;
+
+	const getItemStyle = (isDragging: boolean, draggableStyle: React.CSSProperties): React.CSSProperties => ({
+		// some basic styles to make the items look a bit nicer
+		userSelect: "none",
+		padding: grid * 2,
+		margin: `0 0 ${grid}px 0`,
+
+		// change background colour if dragging
+		background: isDragging ? "lightgreen" : "grey",
+
+		// styles we need to apply on draggables
+		...draggableStyle,
+	});
+
+	const getListStyle = (isDraggingOver: boolean): React.CSSProperties => ({
+		background: isDraggingOver ? "lightblue" : "lightgrey",
+		padding: grid,
+		width: 250,
+	});
+
+	const [items, setItems] = useState<Item[]>(getItems(5));
+	const [selected, setSelected] = useState<Item[]>(getItems(5, 5));
+
+	const id2List: { [key: string]: "items" | "selected" } = {
+		droppable: "items",
+		droppable2: "selected",
+	};
+
+	const getList = (id: string): Item[] => (id === "droppable" ? items : selected);
+
+	const onDragEnd = (result: DropResult) => {
+		const { source, destination } = result;
+
+		// dropped outside the list
+		if (!destination) {
+			return;
+		}
+
+		if (source.droppableId === destination.droppableId) {
+			const reorderedItems = reorder(getList(source.droppableId), source.index, destination.index);
+
+			if (source.droppableId === "droppable") {
+				setItems(reorderedItems);
+			} else {
+				setSelected(reorderedItems);
+			}
+		} else {
+			const result = move(getList(source.droppableId), getList(destination.droppableId), source, destination);
+
+			setItems(result.droppable);
+			setSelected(result.droppable2);
+		}
+	};
 	function allowDrop(ev: any) {
 		ev.preventDefault();
 	}
@@ -100,638 +206,682 @@ const EditModel: FunctionComponent = () => {
 			setSelectedFields(modSelectedFields);
 		}
 	}
+
 	return (
 		<div className="bg-dot-black/[0.2] h-full px-10">
 			<p className="flex flex-row h-39 items-center flex-shrink-0 text-gray-400 font-roboto text-26 font-bold mb-3 py-3">
 				<ArrowLeft /> Back
 			</p>
-			<div className="flex flex-row mt-10 w-full h-[86%] gap-3">
-				{!chosenField ? (
-					<div
-						className="inline-flex w-[400px] h-full py-[25px] px-[30px] pb-[65px] flex-col items-start gap-13 flex-shrink-0 rounded-lg border border-solid border-[#C0E6DD] bg-[#F7FAFF]"
-						onDragOver={(event) => {
-							allowDrop(event);
-						}}
-						onDrop={(event) => {
-							removeSelected(event);
-						}}
-					>
-						<div>
-							<Breadcrumb>
-								<BreadcrumbList>
-									<BreadcrumbItem>
-										<BreadcrumbLink href="/">Home</BreadcrumbLink>
-									</BreadcrumbItem>
-									<BreadcrumbSeparator>
-										<Slash />
-									</BreadcrumbSeparator>
-									<BreadcrumbItem>
-										<BreadcrumbLink href="/components">Components</BreadcrumbLink>
-									</BreadcrumbItem>
-									<BreadcrumbSeparator>
-										<Slash />
-									</BreadcrumbSeparator>
-									<BreadcrumbItem>
-										<BreadcrumbPage>Breadcrumb</BreadcrumbPage>
-									</BreadcrumbItem>
-								</BreadcrumbList>
-							</Breadcrumb>
-						</div>
-						<div className="py-[25px] px-[30px] pl-2 gap-[13px] flex flex-col">
-							<div className="flex flex-row justify-between">
-								<p className="text-blue-900 font-roboto text-[22px] font-semibold">Insert Fields</p>
-								<div className="flex w-[102px] h-[32px] gap-[5px]">
-									<JSONIcon />
-									<CheckFileIcon />
-									<CancelFileIcon />
-								</div>
-							</div>
-							<div className="text-gray-500 font-roboto text-xs font-normal leading-22">
-								Drag and Drop a field type to get started. Various Design Elements and Button Elements can also be used to provide
-								more context.
-							</div>
-						</div>
-						<div className="self-stretch flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full my-2 gap-[13px]">
-							<div className="text-green-800 font-sans text-base font-bold leading-5">Filter</div>
-							<div className="flex flex-row justify-between w-full">
-								<Select label="Select" className="max-w-xs w-24" size="sm" variant="bordered">
-									<SelectItem key="text" value="text">
-										Text
-									</SelectItem>
-									<SelectItem key="textarea" value="textarea">
-										Textarea
-									</SelectItem>
-									<SelectItem key="checkbox" value="checkbox">
-										Checkbox
-									</SelectItem>
-									<SelectItem key="radio" value="radio">
-										Radio Button
-									</SelectItem>
-									<SelectItem key="select" value="select">
-										Dropdown Select
-									</SelectItem>
-									<SelectItem key="date" value="date">
-										Date Picker
-									</SelectItem>
-									<SelectItem key="time" value="time">
-										Time Picker
-									</SelectItem>
-									<SelectItem key="email" value="email">
-										Email
-									</SelectItem>
-									<SelectItem key="password" value="password">
-										Password
-									</SelectItem>
-									<SelectItem key="file" value="file">
-										File Upload
-									</SelectItem>
-									<SelectItem key="number" value="number">
-										Number
-									</SelectItem>
-									<SelectItem key="tel" value="tel">
-										Telephone
-									</SelectItem>
-									<SelectItem key="url" value="url">
-										URL
-									</SelectItem>
-								</Select>
-								<Select label="Select" className="max-w-xs w-24" size="sm" variant="bordered">
-									<SelectItem key="text" value="text">
-										Text
-									</SelectItem>
-									<SelectItem key="textarea" value="textarea">
-										Textarea
-									</SelectItem>
-									<SelectItem key="checkbox" value="checkbox">
-										Checkbox
-									</SelectItem>
-									<SelectItem key="radio" value="radio">
-										Radio Button
-									</SelectItem>
-									<SelectItem key="select" value="select">
-										Dropdown Select
-									</SelectItem>
-									<SelectItem key="date" value="date">
-										Date Picker
-									</SelectItem>
-									<SelectItem key="time" value="time">
-										Time Picker
-									</SelectItem>
-									<SelectItem key="email" value="email">
-										Email
-									</SelectItem>
-									<SelectItem key="password" value="password">
-										Password
-									</SelectItem>
-									<SelectItem key="file" value="file">
-										File Upload
-									</SelectItem>
-									<SelectItem key="number" value="number">
-										Number
-									</SelectItem>
-									<SelectItem key="tel" value="tel">
-										Telephone
-									</SelectItem>
-									<SelectItem key="url" value="url">
-										URL
-									</SelectItem>
-								</Select>
-								<Select label="Select" className="max-w-xs w-24" size="sm" variant="bordered">
-									<SelectItem key="text" value="text">
-										Text
-									</SelectItem>
-									<SelectItem key="textarea" value="textarea">
-										Textarea
-									</SelectItem>
-									<SelectItem key="checkbox" value="checkbox">
-										Checkbox
-									</SelectItem>
-									<SelectItem key="radio" value="radio">
-										Radio Button
-									</SelectItem>
-									<SelectItem key="select" value="select">
-										Dropdown Select
-									</SelectItem>
-									<SelectItem key="date" value="date">
-										Date Picker
-									</SelectItem>
-									<SelectItem key="time" value="time">
-										Time Picker
-									</SelectItem>
-									<SelectItem key="email" value="email">
-										Email
-									</SelectItem>
-									<SelectItem key="password" value="password">
-										Password
-									</SelectItem>
-									<SelectItem key="file" value="file">
-										File Upload
-									</SelectItem>
-									<SelectItem key="number" value="number">
-										Number
-									</SelectItem>
-									<SelectItem key="tel" value="tel">
-										Telephone
-									</SelectItem>
-									<SelectItem key="url" value="url">
-										URL
-									</SelectItem>
-								</Select>
-							</div>
-						</div>
-						<div className="w-full h-[70%] overflow-y-scroll flex flex-col gap-[13px]">
-							<div className="text-green-800 font-sans text-base font-bold leading-5">Fields</div>
-							{availableFields.map((e: any) => {
-								return (
-									<Button
-										className="field w-full h-[46px] p-4 flex items-center gap-2.5 flex-shrink-0 rounded-lg border border-dashed border-[#B79848] bg-[#FFFBEB] text-green-800 font-bold font-sans text-sm justify-start"
-										disableAnimation={false}
-										disableRipple={true}
-										draggable={"true"}
-										onDragStart={(event) => {
-											dragStart(event, e.id);
-										}}
-									>
-										<div className="flex flex-row gap-3 w-full">
-											<CarbonIcon /> {e.name}
-										</div>
-									</Button>
-								);
-							})}
-						</div>
-					</div>
-				) : (
-					<div
-						className="inline-flex w-[400px] h-full py-[25px] px-[30px] pb-[65px] flex-col items-start gap-13 flex-shrink-0 rounded-lg border border-solid border-[#C0E6DD] bg-[#F7FAFF]"
-						onDragOver={(event) => {
-							allowDrop(event);
-						}}
-						onDrop={(event) => {
-							removeSelected(event);
-						}}
-					>
-						<div>
-							<Breadcrumb>
-								<BreadcrumbList>
-									<BreadcrumbItem>
-										<BreadcrumbLink href="/">Home</BreadcrumbLink>
-									</BreadcrumbItem>
-									<BreadcrumbSeparator>
-										<Slash />
-									</BreadcrumbSeparator>
-									<BreadcrumbItem>
-										<BreadcrumbLink href="/components">Components</BreadcrumbLink>
-									</BreadcrumbItem>
-									<BreadcrumbSeparator>
-										<Slash />
-									</BreadcrumbSeparator>
-									<BreadcrumbItem>
-										<BreadcrumbPage>Breadcrumb</BreadcrumbPage>
-									</BreadcrumbItem>
-								</BreadcrumbList>
-							</Breadcrumb>
-						</div>
-						<div className="py-[25px] px-[30px] pl-2 gap-[13px] flex flex-col">
-							<div className="flex flex-row justify-between">
-								<p className="text-blue-900 font-roboto text-[22px] font-semibold">Insert Fields</p>
-								<div className="flex w-[102px] h-[32px] gap-[5px]">
-									<JSONIcon />
-									<CheckFileIcon />
-									<CancelFileIcon />
-								</div>
-							</div>
-							<div className="text-gray-500 font-roboto text-xs font-normal leading-22">
-								Drag and Drop a field type to get started. Various Design Elements and Button Elements can also be used to provide
-								more context.
-							</div>
-						</div>
-						<div className="self-stretch flex flex-row items-start justify-start pt-0 px-0 pb-0 box-border max-w-full my-2 gap-[13px]">
-							<div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
-								<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-									<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-										<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-											Field Name
-										</div>
-										<div className="self-stretch shadow-[0px_1px_2px_rgba(16,_24,_40,_0.05)] rounded-lg box-border overflow-hidden flex flex-row items-center justify-start py-2 px-[13px] gap-[8px] max-w-full border-[1px] border-solid  bg-[#E9EEF6] border-[#C3D6F4] mb-2">
-											<Input
-												type="text"
-												placeholder="Field 1"
-												id="nameInput"
-												className="!outline-none focus:ring-0 w-full [border:none] [outline:none] bg-[transparent] h-6 flex-1 flex flex-row items-center justify-start font-merriweather-sans text-sm text-darkslateblue min-w-[208px] max-w-full"
-											/>
-											<img className="h-4 w-4 relative" alt="" src="/help-icon.svg" />
-										</div>
-									</div>
-								</div>
-							</div>
-							<div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
-								<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-									<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-										<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-											Place Holder Text
-										</div>
-										<div className="self-stretch shadow-[0px_1px_2px_rgba(16,_24,_40,_0.05)] rounded-lg  box-border overflow-hidden flex flex-row items-center justify-start py-2 px-[13px] gap-[8px] max-w-full border-[1px] border-solid  bg-[#E9EEF6] border-[#C3D6F4] mb-2">
-											<Input
-												type="text"
-												placeholder="Field 1"
-												id="nameInput"
-												className="!outline-none focus:ring-0 w-full [border:none] [outline:none] bg-[transparent] h-6 flex-1 flex flex-row items-center justify-start font-merriweather-sans text-sm text-darkslateblue min-w-[208px] max-w-full"
-											/>
-											<img className="h-4 w-4 relative" alt="" src="/help-icon.svg" />
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div className="self-stretch flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3">
-							<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-								<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-									<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-										Instructions
-									</div>
-									<div className="self-stretch shadow-[0px_1px_2px_rgba(16,_24,_40,_0.05)] rounded-lg bg-[#E9EEF6] box-border overflow-hidden flex flex-row items-center justify-start py-2 px-[13px] gap-[8px] max-w-full border-[1px] border-solid border-[#C3D6F4] mb-2">
-										<Input
-											type="text"
-											placeholder="Hello World"
-											value="Hello World"
-											id="nameInput"
-											className="!outline-none focus:ring-0 w-full [border:none] [outline:none] bg-[transparent] h-[215px] flex-1 flex flex-row items-center justify-start font-merriweather-sans text-sm text-darkslateblue min-w-[208px] max-w-full"
-										/>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3">
-							<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-								<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-									<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-										Range
-									</div>
-									<div className="flex flex-row items-center justify-start py-2 gap-[8px]">
-										<Input
-											type="text"
-											placeholder="Min"
-											id="nameInput"
-											className="w-[30%] rounded-md border border-solid border-blue-200 bg-blue-50 shadow-xs"
-										/>
-
-										<Input
-											type="text"
-											placeholder="Max"
-											id="nameInput"
-											className="w-[30%] rounded-md border border-solid border-blue-200 bg-blue-50 shadow-xs"
-										/>
-
-										<Select label="Select" className="max-w-xs w-[30%]" size="sm" variant="bordered">
-											<SelectItem key="text" value="text">
-												Text
-											</SelectItem>
-											<SelectItem key="textarea" value="textarea">
-												Textarea
-											</SelectItem>
-											<SelectItem key="checkbox" value="checkbox">
-												Checkbox
-											</SelectItem>
-											<SelectItem key="radio" value="radio">
-												Radio Button
-											</SelectItem>
-											<SelectItem key="select" value="select">
-												Dropdown Select
-											</SelectItem>
-											<SelectItem key="date" value="date">
-												Date Picker
-											</SelectItem>
-											<SelectItem key="time" value="time">
-												Time Picker
-											</SelectItem>
-											<SelectItem key="email" value="email">
-												Email
-											</SelectItem>
-											<SelectItem key="password" value="password">
-												Password
-											</SelectItem>
-											<SelectItem key="file" value="file">
-												File Upload
-											</SelectItem>
-											<SelectItem key="number" value="number">
-												Number
-											</SelectItem>
-											<SelectItem key="tel" value="tel">
-												Telephone
-											</SelectItem>
-											<SelectItem key="url" value="url">
-												URL
-											</SelectItem>
-										</Select>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div className="self-stretch flex flex-row items-start justify-start pt-0 px-0 pb-0 box-border max-w-full my-2 gap-[13px]">
-							<div className="self-stretch flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
-								<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-									<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-										<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-											Input Type
-										</div>
-										<Select label="Select" className="max-w-xs w-full" size="sm" variant="bordered">
-											<SelectItem key="text" value="text">
-												Text
-											</SelectItem>
-											<SelectItem key="textarea" value="textarea">
-												Textarea
-											</SelectItem>
-											<SelectItem key="checkbox" value="checkbox">
-												Checkbox
-											</SelectItem>
-											<SelectItem key="radio" value="radio">
-												Radio Button
-											</SelectItem>
-											<SelectItem key="select" value="select">
-												Dropdown Select
-											</SelectItem>
-											<SelectItem key="date" value="date">
-												Date Picker
-											</SelectItem>
-											<SelectItem key="time" value="time">
-												Time Picker
-											</SelectItem>
-											<SelectItem key="email" value="email">
-												Email
-											</SelectItem>
-											<SelectItem key="password" value="password">
-												Password
-											</SelectItem>
-											<SelectItem key="file" value="file">
-												File Upload
-											</SelectItem>
-											<SelectItem key="number" value="number">
-												Number
-											</SelectItem>
-											<SelectItem key="tel" value="tel">
-												Telephone
-											</SelectItem>
-											<SelectItem key="url" value="url">
-												URL
-											</SelectItem>
-										</Select>
-									</div>
-								</div>
-							</div>
-							<div className="self-stretch flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
-								<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-									<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-										<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-											Field
-										</div>
-										<Select label="Select" className="max-w-xs w-full" size="sm" variant="bordered">
-											<SelectItem key="text" value="text">
-												Text
-											</SelectItem>
-											<SelectItem key="textarea" value="textarea">
-												Textarea
-											</SelectItem>
-											<SelectItem key="checkbox" value="checkbox">
-												Checkbox
-											</SelectItem>
-											<SelectItem key="radio" value="radio">
-												Radio Button
-											</SelectItem>
-											<SelectItem key="select" value="select">
-												Dropdown Select
-											</SelectItem>
-											<SelectItem key="date" value="date">
-												Date Picker
-											</SelectItem>
-											<SelectItem key="time" value="time">
-												Time Picker
-											</SelectItem>
-											<SelectItem key="email" value="email">
-												Email
-											</SelectItem>
-											<SelectItem key="password" value="password">
-												Password
-											</SelectItem>
-											<SelectItem key="file" value="file">
-												File Upload
-											</SelectItem>
-											<SelectItem key="number" value="number">
-												Number
-											</SelectItem>
-											<SelectItem key="tel" value="tel">
-												Telephone
-											</SelectItem>
-											<SelectItem key="url" value="url">
-												URL
-											</SelectItem>
-										</Select>
-										<Select label="Select" className="max-w-xs w-full" size="sm" variant="bordered">
-											<SelectItem key="text" value="text">
-												Text
-											</SelectItem>
-											<SelectItem key="textarea" value="textarea">
-												Textarea
-											</SelectItem>
-											<SelectItem key="checkbox" value="checkbox">
-												Checkbox
-											</SelectItem>
-											<SelectItem key="radio" value="radio">
-												Radio Button
-											</SelectItem>
-											<SelectItem key="select" value="select">
-												Dropdown Select
-											</SelectItem>
-											<SelectItem key="date" value="date">
-												Date Picker
-											</SelectItem>
-											<SelectItem key="time" value="time">
-												Time Picker
-											</SelectItem>
-											<SelectItem key="email" value="email">
-												Email
-											</SelectItem>
-											<SelectItem key="password" value="password">
-												Password
-											</SelectItem>
-											<SelectItem key="file" value="file">
-												File Upload
-											</SelectItem>
-											<SelectItem key="number" value="number">
-												Number
-											</SelectItem>
-											<SelectItem key="tel" value="tel">
-												Telephone
-											</SelectItem>
-											<SelectItem key="url" value="url">
-												URL
-											</SelectItem>
-										</Select>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div className="self-stretch flex flex-row items-start justify-start pt-0 px-0 pb-0 box-border max-w-full my-2 gap-[13px]">
-							<div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
-								<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-									<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-										<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-											Field
-										</div>
-										<div className="flex items-center space-x-2">
-											<Checkbox id="terms" className="accent-[#C3D6F4]" />
-											<label htmlFor="terms" className="text-black font-merriweather-sans text-[12px] font-light leading-24">
-												Mandatory
-											</label>
-										</div>
-										<div className="flex items-center space-x-2">
-											<Checkbox id="terms" className="accent-[#C3D6F4]" />
-											<label htmlFor="terms" className="text-black font-merriweather-sans text-[12px] font-light leading-24">
-												Allow Negative Values
-											</label>
-										</div>
-										<div className="flex items-center space-x-2">
-											<Checkbox id="terms" className="accent-[#C3D6F4]" />
-											<label htmlFor="terms" className="text-black font-merriweather-sans text-[12px] font-light leading-24">
-												No Duplicate
-											</label>
-										</div>
-									</div>
-								</div>
-							</div>
-							<div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
-								<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-									<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-										<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-											Country Pin
-										</div>
-										<Select label="Select" className="max-w-xs w-full" size="sm" variant="bordered">
-											<SelectItem key="text" value="text">
-												Text
-											</SelectItem>
-											<SelectItem key="textarea" value="textarea">
-												Textarea
-											</SelectItem>
-											<SelectItem key="checkbox" value="checkbox">
-												Checkbox
-											</SelectItem>
-											<SelectItem key="radio" value="radio">
-												Radio Button
-											</SelectItem>
-											<SelectItem key="select" value="select">
-												Dropdown Select
-											</SelectItem>
-											<SelectItem key="date" value="date">
-												Date Picker
-											</SelectItem>
-											<SelectItem key="time" value="time">
-												Time Picker
-											</SelectItem>
-											<SelectItem key="email" value="email">
-												Email
-											</SelectItem>
-											<SelectItem key="password" value="password">
-												Password
-											</SelectItem>
-											<SelectItem key="file" value="file">
-												File Upload
-											</SelectItem>
-											<SelectItem key="number" value="number">
-												Number
-											</SelectItem>
-											<SelectItem key="tel" value="tel">
-												Telephone
-											</SelectItem>
-											<SelectItem key="url" value="url">
-												URL
-											</SelectItem>
-										</Select>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				)}
-				<div className="flex-grow h-full flex-shrink-0 rounded-lg border border-solid border-[#C0E6DD] bg-[#F7FAFF] p-20 gap-3 flex flex-col">
-					{selectedFields.map((e: any, i: number) => {
-						return (
-							<Button
-								className="w-full h-[50px] p-4 flex items-center gap-2.5 flex-shrink-0 rounded-lg border border-dashed border-seagreen bg-gray-200 text-green-800 font-bold font-sans text-sm justify-between "
-								disableAnimation={false}
-								disableRipple={true}
-								draggable={"true"}
-								onDragStart={(event) => {
-									dragStart(event, e.id, "move");
-								}}
-								onDragOver={(event) => {
-									allowDrop(event);
-								}}
-								onDrop={(event) => {
-									dropOnChild(event, i);
-								}}
-								onClick={() => {
-									setChosenField(e);
-								}}
-							>
-								<div className="flex flex-row gap-3 w-full">
-									<CarbonIcon /> {e.name}
-								</div>
-							</Button>
-						);
-					})}
-					<div>
-						<div></div>
+			<DragDropContext onDragEnd={onDragEnd}>
+				<div className="flex flex-row mt-10 w-full h-[86%] gap-3">
+					{!chosenField ? (
 						<div
-							className="w-[100%] h-[50px] flex-shrink-0 rounded-lg bg-[#ebedf1] "
-							onDragOver={(event) => {
-								allowDrop(event);
-							}}
-							onDrop={(event) => {
-								dropOnChild(event, selectedFields.length);
-							}}
-						></div>
-					</div>
+							className="inline-flex w-[400px] h-full py-[25px] px-[30px] pb-[65px] flex-col items-start gap-13 flex-shrink-0 rounded-lg border border-solid border-[#C0E6DD] bg-[#F7FAFF]"
+							// onDragOver={(event) => {
+							// 	allowDrop(event);
+							// }}
+							// onDrop={(event) => {
+							// 	removeSelected(event);
+							// }}
+						>
+							<div>
+								<Breadcrumb>
+									<BreadcrumbList>
+										<BreadcrumbItem>
+											<BreadcrumbLink href="/">Home</BreadcrumbLink>
+										</BreadcrumbItem>
+										<BreadcrumbSeparator>
+											<Slash />
+										</BreadcrumbSeparator>
+										<BreadcrumbItem>
+											<BreadcrumbLink href="/components">Components</BreadcrumbLink>
+										</BreadcrumbItem>
+										<BreadcrumbSeparator>
+											<Slash />
+										</BreadcrumbSeparator>
+										<BreadcrumbItem>
+											<BreadcrumbPage>Breadcrumb</BreadcrumbPage>
+										</BreadcrumbItem>
+									</BreadcrumbList>
+								</Breadcrumb>
+							</div>
+							<div className="py-[25px] px-[30px] pl-2 gap-[13px] flex flex-col">
+								<div className="flex flex-row justify-between">
+									<p className="text-blue-900 font-roboto text-[22px] font-semibold">Insert Fields</p>
+									<div className="flex w-[102px] h-[32px] gap-[5px]">
+										<JSONIcon />
+										<CheckFileIcon />
+										<CancelFileIcon />
+									</div>
+								</div>
+								<div className="text-gray-500 font-roboto text-xs font-normal leading-22">
+									Drag and Drop a field type to get started. Various Design Elements and Button Elements can also be used to provide
+									more context.
+								</div>
+							</div>
+							<div className="self-stretch flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full my-2 gap-[13px]">
+								<div className="text-green-800 font-sans text-base font-bold leading-5">Filter</div>
+								<div className="flex flex-row justify-between w-full">
+									<Select label="Select" className="max-w-xs w-24" size="sm" variant="bordered">
+										<SelectItem key="text" value="text">
+											Text
+										</SelectItem>
+										<SelectItem key="textarea" value="textarea">
+											Textarea
+										</SelectItem>
+										<SelectItem key="checkbox" value="checkbox">
+											Checkbox
+										</SelectItem>
+										<SelectItem key="radio" value="radio">
+											Radio Button
+										</SelectItem>
+										<SelectItem key="select" value="select">
+											Dropdown Select
+										</SelectItem>
+										<SelectItem key="date" value="date">
+											Date Picker
+										</SelectItem>
+										<SelectItem key="time" value="time">
+											Time Picker
+										</SelectItem>
+										<SelectItem key="email" value="email">
+											Email
+										</SelectItem>
+										<SelectItem key="password" value="password">
+											Password
+										</SelectItem>
+										<SelectItem key="file" value="file">
+											File Upload
+										</SelectItem>
+										<SelectItem key="number" value="number">
+											Number
+										</SelectItem>
+										<SelectItem key="tel" value="tel">
+											Telephone
+										</SelectItem>
+										<SelectItem key="url" value="url">
+											URL
+										</SelectItem>
+									</Select>
+									<Select label="Select" className="max-w-xs w-24" size="sm" variant="bordered">
+										<SelectItem key="text" value="text">
+											Text
+										</SelectItem>
+										<SelectItem key="textarea" value="textarea">
+											Textarea
+										</SelectItem>
+										<SelectItem key="checkbox" value="checkbox">
+											Checkbox
+										</SelectItem>
+										<SelectItem key="radio" value="radio">
+											Radio Button
+										</SelectItem>
+										<SelectItem key="select" value="select">
+											Dropdown Select
+										</SelectItem>
+										<SelectItem key="date" value="date">
+											Date Picker
+										</SelectItem>
+										<SelectItem key="time" value="time">
+											Time Picker
+										</SelectItem>
+										<SelectItem key="email" value="email">
+											Email
+										</SelectItem>
+										<SelectItem key="password" value="password">
+											Password
+										</SelectItem>
+										<SelectItem key="file" value="file">
+											File Upload
+										</SelectItem>
+										<SelectItem key="number" value="number">
+											Number
+										</SelectItem>
+										<SelectItem key="tel" value="tel">
+											Telephone
+										</SelectItem>
+										<SelectItem key="url" value="url">
+											URL
+										</SelectItem>
+									</Select>
+									<Select label="Select" className="max-w-xs w-24" size="sm" variant="bordered">
+										<SelectItem key="text" value="text">
+											Text
+										</SelectItem>
+										<SelectItem key="textarea" value="textarea">
+											Textarea
+										</SelectItem>
+										<SelectItem key="checkbox" value="checkbox">
+											Checkbox
+										</SelectItem>
+										<SelectItem key="radio" value="radio">
+											Radio Button
+										</SelectItem>
+										<SelectItem key="select" value="select">
+											Dropdown Select
+										</SelectItem>
+										<SelectItem key="date" value="date">
+											Date Picker
+										</SelectItem>
+										<SelectItem key="time" value="time">
+											Time Picker
+										</SelectItem>
+										<SelectItem key="email" value="email">
+											Email
+										</SelectItem>
+										<SelectItem key="password" value="password">
+											Password
+										</SelectItem>
+										<SelectItem key="file" value="file">
+											File Upload
+										</SelectItem>
+										<SelectItem key="number" value="number">
+											Number
+										</SelectItem>
+										<SelectItem key="tel" value="tel">
+											Telephone
+										</SelectItem>
+										<SelectItem key="url" value="url">
+											URL
+										</SelectItem>
+									</Select>
+								</div>
+							</div>
+							<Droppable droppableId="droppable">
+								{(provided, snapshot) => (
+									<div
+										ref={provided.innerRef}
+										style={getListStyle(snapshot.isDraggingOver)}
+										className="w-full h-[70%] overflow-y-scroll flex flex-col gap-[13px]"
+									>
+										<div className="text-green-800 font-sans text-base font-bold leading-5">Fields</div>
+										{availableFields.map((e: any, index: number) => {
+											return (
+												<Draggable key={e.id} draggableId={e.id} index={index}>
+													{(provided, snapshot) => (
+														<Button
+															ref={provided.innerRef}
+															{...provided.draggableProps}
+															{...provided.dragHandleProps}
+															style={getItemStyle(snapshot.isDragging, provided.draggableProps.style!)}
+															className="field w-full h-[46px] p-4 flex items-center gap-2.5 flex-shrink-0 rounded-lg border border-dashed border-[#B79848] bg-[#FFFBEB] text-green-800 font-bold font-sans text-sm justify-start"
+															disableAnimation={false}
+															disableRipple={true}
+															// draggable={"true"}
+															// onDragStart={(event) => {
+															// 	dragStart(event, e.id);
+															// }}
+														>
+															<div className="flex flex-row gap-3 w-full">
+																<CarbonIcon /> {e.name}
+															</div>
+														</Button>
+													)}
+												</Draggable>
+											);
+										})}
+									</div>
+								)}
+							</Droppable>
+						</div>
+					) : (
+						<div
+							className="inline-flex w-[400px] h-full py-[25px] px-[30px] pb-[65px] flex-col items-start gap-13 flex-shrink-0 rounded-lg border border-solid border-[#C0E6DD] bg-[#F7FAFF]"
+							// onDragOver={(event) => {
+							// 	allowDrop(event);
+							// }}
+							// onDrop={(event) => {
+							// 	removeSelected(event);
+							// }}
+						>
+							<div>
+								<Breadcrumb>
+									<BreadcrumbList>
+										<BreadcrumbItem>
+											<BreadcrumbLink href="/">Home</BreadcrumbLink>
+										</BreadcrumbItem>
+										<BreadcrumbSeparator>
+											<Slash />
+										</BreadcrumbSeparator>
+										<BreadcrumbItem>
+											<BreadcrumbLink href="/components">Components</BreadcrumbLink>
+										</BreadcrumbItem>
+										<BreadcrumbSeparator>
+											<Slash />
+										</BreadcrumbSeparator>
+										<BreadcrumbItem>
+											<BreadcrumbPage>Breadcrumb</BreadcrumbPage>
+										</BreadcrumbItem>
+									</BreadcrumbList>
+								</Breadcrumb>
+							</div>
+							<div className="py-[25px] px-[30px] pl-2 gap-[13px] flex flex-col">
+								<div className="flex flex-row justify-between">
+									<p className="text-blue-900 font-roboto text-[22px] font-semibold">Insert Fields</p>
+									<div className="flex w-[102px] h-[32px] gap-[5px]">
+										<JSONIcon />
+										<CheckFileIcon />
+										<CancelFileIcon />
+									</div>
+								</div>
+								<div className="text-gray-500 font-roboto text-xs font-normal leading-22">
+									Drag and Drop a field type to get started. Various Design Elements and Button Elements can also be used to provide
+									more context.
+								</div>
+							</div>
+							<div className="self-stretch flex flex-row items-start justify-start pt-0 px-0 pb-0 box-border max-w-full my-2 gap-[13px]">
+								<div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
+									<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+										<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+											<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
+												Field Name
+											</div>
+											<div className="self-stretch shadow-[0px_1px_2px_rgba(16,_24,_40,_0.05)] rounded-lg box-border overflow-hidden flex flex-row items-center justify-start py-2 px-[13px] gap-[8px] max-w-full border-[1px] border-solid  bg-[#E9EEF6] border-[#C3D6F4] mb-2">
+												<Input
+													type="text"
+													placeholder="Field 1"
+													id="nameInput"
+													className="!outline-none focus:ring-0 w-full [border:none] [outline:none] bg-[transparent] h-6 flex-1 flex flex-row items-center justify-start font-merriweather-sans text-sm text-darkslateblue min-w-[208px] max-w-full"
+												/>
+												<img className="h-4 w-4 relative" alt="" src="/help-icon.svg" />
+											</div>
+										</div>
+									</div>
+								</div>
+								<div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
+									<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+										<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+											<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
+												Place Holder Text
+											</div>
+											<div className="self-stretch shadow-[0px_1px_2px_rgba(16,_24,_40,_0.05)] rounded-lg  box-border overflow-hidden flex flex-row items-center justify-start py-2 px-[13px] gap-[8px] max-w-full border-[1px] border-solid  bg-[#E9EEF6] border-[#C3D6F4] mb-2">
+												<Input
+													type="text"
+													placeholder="Field 1"
+													id="nameInput"
+													className="!outline-none focus:ring-0 w-full [border:none] [outline:none] bg-[transparent] h-6 flex-1 flex flex-row items-center justify-start font-merriweather-sans text-sm text-darkslateblue min-w-[208px] max-w-full"
+												/>
+												<img className="h-4 w-4 relative" alt="" src="/help-icon.svg" />
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div className="self-stretch flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3">
+								<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+									<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+										<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
+											Instructions
+										</div>
+										<div className="self-stretch shadow-[0px_1px_2px_rgba(16,_24,_40,_0.05)] rounded-lg bg-[#E9EEF6] box-border overflow-hidden flex flex-row items-center justify-start py-2 px-[13px] gap-[8px] max-w-full border-[1px] border-solid border-[#C3D6F4] mb-2">
+											<Input
+												type="text"
+												placeholder="Hello World"
+												value="Hello World"
+												id="nameInput"
+												className="!outline-none focus:ring-0 w-full [border:none] [outline:none] bg-[transparent] h-[215px] flex-1 flex flex-row items-center justify-start font-merriweather-sans text-sm text-darkslateblue min-w-[208px] max-w-full"
+											/>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3">
+								<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+									<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+										<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
+											Range
+										</div>
+										<div className="flex flex-row items-center justify-start py-2 gap-[8px]">
+											<Input
+												type="text"
+												placeholder="Min"
+												id="nameInput"
+												className="w-[30%] rounded-md border border-solid border-blue-200 bg-blue-50 shadow-xs"
+											/>
+
+											<Input
+												type="text"
+												placeholder="Max"
+												id="nameInput"
+												className="w-[30%] rounded-md border border-solid border-blue-200 bg-blue-50 shadow-xs"
+											/>
+
+											<Select label="Select" className="max-w-xs w-[30%]" size="sm" variant="bordered">
+												<SelectItem key="text" value="text">
+													Text
+												</SelectItem>
+												<SelectItem key="textarea" value="textarea">
+													Textarea
+												</SelectItem>
+												<SelectItem key="checkbox" value="checkbox">
+													Checkbox
+												</SelectItem>
+												<SelectItem key="radio" value="radio">
+													Radio Button
+												</SelectItem>
+												<SelectItem key="select" value="select">
+													Dropdown Select
+												</SelectItem>
+												<SelectItem key="date" value="date">
+													Date Picker
+												</SelectItem>
+												<SelectItem key="time" value="time">
+													Time Picker
+												</SelectItem>
+												<SelectItem key="email" value="email">
+													Email
+												</SelectItem>
+												<SelectItem key="password" value="password">
+													Password
+												</SelectItem>
+												<SelectItem key="file" value="file">
+													File Upload
+												</SelectItem>
+												<SelectItem key="number" value="number">
+													Number
+												</SelectItem>
+												<SelectItem key="tel" value="tel">
+													Telephone
+												</SelectItem>
+												<SelectItem key="url" value="url">
+													URL
+												</SelectItem>
+											</Select>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div className="self-stretch flex flex-row items-start justify-start pt-0 px-0 pb-0 box-border max-w-full my-2 gap-[13px]">
+								<div className="self-stretch flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
+									<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+										<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+											<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
+												Input Type
+											</div>
+											<Select label="Select" className="max-w-xs w-full" size="sm" variant="bordered">
+												<SelectItem key="text" value="text">
+													Text
+												</SelectItem>
+												<SelectItem key="textarea" value="textarea">
+													Textarea
+												</SelectItem>
+												<SelectItem key="checkbox" value="checkbox">
+													Checkbox
+												</SelectItem>
+												<SelectItem key="radio" value="radio">
+													Radio Button
+												</SelectItem>
+												<SelectItem key="select" value="select">
+													Dropdown Select
+												</SelectItem>
+												<SelectItem key="date" value="date">
+													Date Picker
+												</SelectItem>
+												<SelectItem key="time" value="time">
+													Time Picker
+												</SelectItem>
+												<SelectItem key="email" value="email">
+													Email
+												</SelectItem>
+												<SelectItem key="password" value="password">
+													Password
+												</SelectItem>
+												<SelectItem key="file" value="file">
+													File Upload
+												</SelectItem>
+												<SelectItem key="number" value="number">
+													Number
+												</SelectItem>
+												<SelectItem key="tel" value="tel">
+													Telephone
+												</SelectItem>
+												<SelectItem key="url" value="url">
+													URL
+												</SelectItem>
+											</Select>
+										</div>
+									</div>
+								</div>
+								<div className="self-stretch flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
+									<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+										<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+											<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
+												Field
+											</div>
+											<Select label="Select" className="max-w-xs w-full" size="sm" variant="bordered">
+												<SelectItem key="text" value="text">
+													Text
+												</SelectItem>
+												<SelectItem key="textarea" value="textarea">
+													Textarea
+												</SelectItem>
+												<SelectItem key="checkbox" value="checkbox">
+													Checkbox
+												</SelectItem>
+												<SelectItem key="radio" value="radio">
+													Radio Button
+												</SelectItem>
+												<SelectItem key="select" value="select">
+													Dropdown Select
+												</SelectItem>
+												<SelectItem key="date" value="date">
+													Date Picker
+												</SelectItem>
+												<SelectItem key="time" value="time">
+													Time Picker
+												</SelectItem>
+												<SelectItem key="email" value="email">
+													Email
+												</SelectItem>
+												<SelectItem key="password" value="password">
+													Password
+												</SelectItem>
+												<SelectItem key="file" value="file">
+													File Upload
+												</SelectItem>
+												<SelectItem key="number" value="number">
+													Number
+												</SelectItem>
+												<SelectItem key="tel" value="tel">
+													Telephone
+												</SelectItem>
+												<SelectItem key="url" value="url">
+													URL
+												</SelectItem>
+											</Select>
+											<Select label="Select" className="max-w-xs w-full" size="sm" variant="bordered">
+												<SelectItem key="text" value="text">
+													Text
+												</SelectItem>
+												<SelectItem key="textarea" value="textarea">
+													Textarea
+												</SelectItem>
+												<SelectItem key="checkbox" value="checkbox">
+													Checkbox
+												</SelectItem>
+												<SelectItem key="radio" value="radio">
+													Radio Button
+												</SelectItem>
+												<SelectItem key="select" value="select">
+													Dropdown Select
+												</SelectItem>
+												<SelectItem key="date" value="date">
+													Date Picker
+												</SelectItem>
+												<SelectItem key="time" value="time">
+													Time Picker
+												</SelectItem>
+												<SelectItem key="email" value="email">
+													Email
+												</SelectItem>
+												<SelectItem key="password" value="password">
+													Password
+												</SelectItem>
+												<SelectItem key="file" value="file">
+													File Upload
+												</SelectItem>
+												<SelectItem key="number" value="number">
+													Number
+												</SelectItem>
+												<SelectItem key="tel" value="tel">
+													Telephone
+												</SelectItem>
+												<SelectItem key="url" value="url">
+													URL
+												</SelectItem>
+											</Select>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div className="self-stretch flex flex-row items-start justify-start pt-0 px-0 pb-0 box-border max-w-full my-2 gap-[13px]">
+								<div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
+									<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+										<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+											<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
+												Field
+											</div>
+											<div className="flex items-center space-x-2">
+												<Checkbox id="terms" className="accent-[#C3D6F4]" />
+												<label
+													htmlFor="terms"
+													className="text-black font-merriweather-sans text-[12px] font-light leading-24"
+												>
+													Mandatory
+												</label>
+											</div>
+											<div className="flex items-center space-x-2">
+												<Checkbox id="terms" className="accent-[#C3D6F4]" />
+												<label
+													htmlFor="terms"
+													className="text-black font-merriweather-sans text-[12px] font-light leading-24"
+												>
+													Allow Negative Values
+												</label>
+											</div>
+											<div className="flex items-center space-x-2">
+												<Checkbox id="terms" className="accent-[#C3D6F4]" />
+												<label
+													htmlFor="terms"
+													className="text-black font-merriweather-sans text-[12px] font-light leading-24"
+												>
+													No Duplicate
+												</label>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
+									<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+										<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+											<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
+												Country Pin
+											</div>
+											<Select label="Select" className="max-w-xs w-full" size="sm" variant="bordered">
+												<SelectItem key="text" value="text">
+													Text
+												</SelectItem>
+												<SelectItem key="textarea" value="textarea">
+													Textarea
+												</SelectItem>
+												<SelectItem key="checkbox" value="checkbox">
+													Checkbox
+												</SelectItem>
+												<SelectItem key="radio" value="radio">
+													Radio Button
+												</SelectItem>
+												<SelectItem key="select" value="select">
+													Dropdown Select
+												</SelectItem>
+												<SelectItem key="date" value="date">
+													Date Picker
+												</SelectItem>
+												<SelectItem key="time" value="time">
+													Time Picker
+												</SelectItem>
+												<SelectItem key="email" value="email">
+													Email
+												</SelectItem>
+												<SelectItem key="password" value="password">
+													Password
+												</SelectItem>
+												<SelectItem key="file" value="file">
+													File Upload
+												</SelectItem>
+												<SelectItem key="number" value="number">
+													Number
+												</SelectItem>
+												<SelectItem key="tel" value="tel">
+													Telephone
+												</SelectItem>
+												<SelectItem key="url" value="url">
+													URL
+												</SelectItem>
+											</Select>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					)}
+					<Droppable droppableId="droppable2">
+						{(provided, snapshot) => (
+							<div
+								className="flex-grow h-full flex-shrink-0 rounded-lg border border-solid border-[#C0E6DD] bg-[#F7FAFF] p-20 gap-3 flex flex-col"
+								ref={provided.innerRef}
+								style={getListStyle(snapshot.isDraggingOver)}
+							>
+								{selectedFields.map((e: any, index: number) => {
+									return (
+										<Draggable key={e.id} draggableId={e.id} index={index}>
+											{(provided, snapshot) => (
+												<Button
+													className="w-full h-[50px] p-4 flex items-center gap-2.5 flex-shrink-0 rounded-lg border border-dashed border-seagreen bg-gray-200 text-green-800 font-bold font-sans text-sm justify-between "
+													disableAnimation={false}
+													disableRipple={true}
+													ref={provided.innerRef}
+													{...provided.draggableProps}
+													{...provided.dragHandleProps}
+													style={getItemStyle(snapshot.isDragging, provided.draggableProps.style!)}
+													// draggable={"true"}
+													// onDragStart={(event) => {
+													// 	dragStart(event, e.id, "move");
+													// }}
+													// onDragOver={(event) => {
+													// 	allowDrop(event);
+													// }}
+													// onDrop={(event) => {
+													// 	dropOnChild(event, index);
+													// }}
+													// onClick={() => {
+													// 	setChosenField(e);
+													// }}
+												>
+													<div className="flex flex-row gap-3 w-full">
+														<CarbonIcon /> {e.name}
+													</div>
+												</Button>
+											)}
+										</Draggable>
+									);
+								})}
+								<div>
+									<div></div>
+									<div
+										className="w-[100%] h-[50px] flex-shrink-0 rounded-lg bg-[#ebedf1] "
+										// onDragOver={(event) => {
+										// 	allowDrop(event);
+										// }}
+										// onDrop={(event) => {
+										// 	dropOnChild(event, selectedFields.length);
+										// }}
+									></div>
+								</div>
+							</div>
+						)}
+					</Droppable>
 				</div>
-			</div>
+			</DragDropContext>
 		</div>
 	);
 };

@@ -29,6 +29,7 @@ import { ReactComponent as DeleteIcon } from "../../assets/mdi_delete.svg";
 import { ReactComponent as EditIcon } from "../../assets/akar-icons_edit.svg";
 import { ReactComponent as RowIcon } from "../../assets/Icon.svg";
 import { CreateButton } from "../../components/util-components/CreateButton";
+import { useNavigate } from "react-router-dom";
 
 export function capitalize(str: string) {
 	return str.charAt(0).toUpperCase() + str.slice(1);
@@ -85,9 +86,13 @@ const Models: FunctionComponent = () => {
 	});
 	const [page, setPage] = React.useState(1);
 	const [selectedField, setSelectedField]: [any, any] = React.useState({});
-
+	const navigate = useNavigate();
 	const handleDialogueTrigger = (field: any) => {
 		setSelectedField(field);
+	};
+
+	const handleModelConfig = (model: any) => {
+		navigate("/models/edit");
 	};
 
 	const handleDeleteField = () => {
@@ -167,7 +172,14 @@ const Models: FunctionComponent = () => {
 			case "edit":
 				return (
 					<div>
-						<Button isIconOnly size="sm" variant="light">
+						<Button
+							isIconOnly
+							size="sm"
+							variant="light"
+							onClick={() => {
+								handleModelConfig(field);
+							}}
+						>
 							<EditIcon />
 						</Button>
 					</div>
@@ -415,7 +427,12 @@ const Models: FunctionComponent = () => {
 							</TableHeader>
 							<TableBody items={sortedItems} className="">
 								{(item) => (
-									<TableRow key={item.id}>
+									<TableRow
+										key={item.id}
+										onClick={(event) => {
+											navigate("/models/relations");
+										}}
+									>
 										{(columnKey) => (
 											<TableCell
 												className={
