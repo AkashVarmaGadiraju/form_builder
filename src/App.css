@@ -36,3 +36,7 @@
 		transform: rotate(360deg);
 	}
 }
+
+.field:drag {
+	@apply opacity-100 cursor-grabbing shadow-lg bg-blue-200;
+}

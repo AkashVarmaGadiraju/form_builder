@@ -1,13 +1,10 @@
 import React, { FunctionComponent, useState } from "react";
-import { Input } from "../util-components/ui/input";
-import { Textarea } from "../util-components/ui/textarea";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../util-components/ui/select";
-import { SheetClose } from "../util-components/ui/sheet";
-import { ChevronDownIcon } from "lucide-react";
-import InputOptions from "./InputOptions";
+import { Input } from "../../components/util-components/ui/input";
+import { Textarea } from "../../components/util-components/ui/textarea";
+import { SheetClose } from "../../components/util-components/ui/sheet";
 import { Tag, TagInput } from "emblor";
 
-const CreateFieldModal: React.FC<{ users: any; setUsers: any }> = ({ users, setUsers }) => {
+const CreateFieldModelSheet: React.FC<{ users: any; setUsers: any }> = ({ users, setUsers }) => {
 	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault(); // Prevent default form submission behavior
 		// Any additional logic you want to perform
@@ -45,17 +42,17 @@ const CreateFieldModal: React.FC<{ users: any; setUsers: any }> = ({ users, setU
 				</div>
 			</section>
 			<section className="self-stretch flex flex-row items-start justify-start py-0 px-0.5 box-border max-w-full w-full">
-				<div className="flex-1 overflow-hidden flex flex-col items-start justify-start gap-[6px] max-w-full px-[5px]">
-					<div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3">
+				<div className="flex-1 overflow-hidden flex flex-col items-start justify-start gap-[6px] max-w-full w-full pb-5">
+					<div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full w-full mb-3">
 						<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full w-full">
-							<div className="flex flex-col items-start justify-start gap-[6px] max-w-full">
-								<div className="relative text-sm leading-[20px] font-noto-sans font-bold text-darkslateblue text-left inline-block min-w-[40px]">
+							<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full w-full">
+								<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px] w-full">
 									Name
 								</div>
-								<div className="self-stretch shadow-[0px_1px_2px_rgba(16,_24,_40,_0.05)] rounded-lg bg-white box-border overflow-hidden flex flex-row items-center justify-start py-2 px-[13px] gap-[8px] max-w-full border-[1px] border-solid border-gray-300 mb-2">
+								<div className="w-full self-stretch shadow-[0px_1px_2px_rgba(16,_24,_40,_0.05)] rounded-lg bg-white box-border overflow-hidden flex flex-row items-center justify-start py-2 px-[13px] gap-[8px] max-w-full border-[1px] border-solid border-gray-300 mb-2">
 									<Input
 										type="text"
-										placeholder="Field 1"
+										placeholder="Name"
 										id="nameInput"
 										className="!outline-none focus:ring-0 w-full [border:none] [outline:none] bg-[transparent] h-6 flex-1 flex flex-row items-center justify-start font-merriweather-sans text-sm text-darkslateblue min-w-[208px] max-w-full"
 										onChange={(e) => {
@@ -67,10 +64,33 @@ const CreateFieldModal: React.FC<{ users: any; setUsers: any }> = ({ users, setU
 							</div>
 						</div>
 					</div>
+					<div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3">
+						<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+							<div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
+								<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
+									Tags
+								</div>
+								<div className="self-stretch shadow-[0px_1px_2px_rgba(16,_24,_40,_0.05)] rounded-lg bg-white box-border overflow-hidden flex flex-row items-center justify-start py-2 px-[13px] gap-[8px] max-w-full border-[1px] border-solid border-gray-300 mb-2">
+									<Input
+										type="text"
+										placeholder="Tags"
+										id="nameInput"
+										className="!outline-none focus:ring-0 w-full [border:none] [outline:none] bg-[transparent] h-6 flex-1 flex flex-row items-center justify-start font-merriweather-sans text-sm text-darkslateblue min-w-[208px] max-w-full"
+										onChange={(e) => {
+											if (e.target.value) {
+												handleFormChange(e.target.value.split(";"), "tags");
+											}
+										}}
+									/>
+									<img className="h-4 w-4 relative" alt="" src="/help-icon.svg" />
+								</div>
+							</div>
+						</div>
+					</div>
 					<div className="self-stretch h-[150px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border">
 						<div className="self-stretch flex flex-col items-start justify-start gap-[6px]">
 							<div className="self-stretch flex flex-col items-start justify-start gap-[6px]">
-								<div className="relative text-sm leading-[20px] font-noto-sans  font-bold text-darkslateblue text-left inline-block min-w-[76px]">
+								<div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[76px]">
 									Description
 								</div>
 								<Textarea
@@ -87,86 +107,6 @@ const CreateFieldModal: React.FC<{ users: any; setUsers: any }> = ({ users, setU
 							</div>
 						</div>
 					</div>
-					<div className="flex flex-row justify-between w-full mt-1">
-						<div className="self-stretch flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full w-full my-2 gap-[8px]">
-							<div className="text-darkslateblue font-noto-sans text-sm font-semibold leading-5">Type</div>
-							<Select
-								value={fieldOptions.type}
-								onValueChange={(e) => {
-									handleFormChange(e, "type");
-								}}
-							>
-								<SelectTrigger className="w-full flex items-center justify-between rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:focus:ring-offset-gray-800">
-									<SelectValue placeholder="Select a field type" />
-								</SelectTrigger>
-								<SelectContent className="bg-white">
-									<SelectGroup>
-										<SelectItem
-											className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-											value="string"
-										>
-											String
-										</SelectItem>
-										<SelectItem
-											className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-											value="integer"
-										>
-											Integer
-										</SelectItem>
-										<SelectItem
-											className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-											value="float"
-										>
-											Float
-										</SelectItem>
-										<SelectItem
-											className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-											value="boolean"
-										>
-											Boolean
-										</SelectItem>
-										<SelectItem
-											className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-											value="file"
-										>
-											File
-										</SelectItem>
-										<SelectItem
-											className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-											value="enum"
-										>
-											Enum
-										</SelectItem>
-										<SelectItem
-											className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-											value="binary"
-										>
-											Binary
-										</SelectItem>
-										<SelectItem
-											className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-											value="array"
-										>
-											Array
-										</SelectItem>
-										<SelectItem
-											className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-											value="dateTime"
-										>
-											Date-Time
-										</SelectItem>
-										<SelectItem
-											className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-											value="json"
-										>
-											JSON
-										</SelectItem>
-									</SelectGroup>
-								</SelectContent>
-							</Select>
-						</div>
-					</div>
-					<InputOptions handleChanges={handleFormChange} values={fieldOptions} />
 				</div>
 			</section>
 			<section className="absolute self-stretch flex flex-row items-start justify-between max-w-full gap-[10px] w-[96%] bottom-0 left-0 bg-white p-10 border-t-2 border-seagreen border-dashed">
@@ -206,4 +146,4 @@ const CreateFieldModal: React.FC<{ users: any; setUsers: any }> = ({ users, setU
 	);
 };
 
-export default CreateFieldModal;
+export default CreateFieldModelSheet;

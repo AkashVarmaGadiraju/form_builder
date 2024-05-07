@@ -5,6 +5,7 @@
   "dependencies": {
     "@nextui-org/react": "^2.3.6",
     "@nextui-org/select": "^2.1.27",
+    "@radix-ui/react-checkbox": "^1.0.4",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-select": "^2.0.0",
     "@testing-library/jest-dom": "^5.17.0",
@@ -16,10 +17,14 @@
     "@types/react-dom": "^18.3.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "emblor": "^1.0.3",
     "framer-motion": "^11.1.7",
+    "konva": "^9.3.6",
     "lucide-react": "^0.376.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-konva": "^18.2.10",
+    "react-konva-utils": "^1.0.6",
     "react-router-dom": "^6.23.0",
     "react-scripts": "5.0.1",
     "tailwind-merge": "^2.3.0",
@@ -52,6 +57,7 @@
     ]
   },
   "devDependencies": {
+    "react-svg-loader": "^3.0.3",
     "tailwindcss": "^3.4.3"
   }
 }

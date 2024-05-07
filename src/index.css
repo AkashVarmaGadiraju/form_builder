@@ -17,3 +17,25 @@ body {
 code {
 	font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
+
+::-webkit-scrollbar {
+	@apply w-[1px]; /* width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+	@apply bg-gray-200; /* color of the track area */
+}
+
+::-webkit-scrollbar-thumb {
+	@apply bg-gray-400 rounded-full; /* color and shape of the scrollbar thumb */
+}
+
+::-webkit-scrollbar-thumb:hover {
+	@apply bg-gray-600; /* color of the scrollbar thumb on hover */
+}
+
+/* Firefox */
+* {
+	scrollbar-width: thin; /* width of the scrollbar */
+	scrollbar-color: #cbd5e0 #e2e8f0; /* colors of the scrollbar thumb and track */
+}
