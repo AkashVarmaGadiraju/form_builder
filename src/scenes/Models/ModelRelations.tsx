@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useRef, useState } from "react";
+import React, { FunctionComponent, useEffect, useRef, useState } from "react";
 import { Input } from "../../components/util-components/ui/input";
 import { Textarea } from "../../components/util-components/ui/textarea";
 import { Select, SelectItem } from "@nextui-org/select";
@@ -22,8 +22,12 @@ import { ReactComponent as BrownCancelIcon } from "../../assets/grommet-icons_cl
 import { ReactComponent as WhiteCancelIcon } from "../../assets/grommet-icons_clear-white.svg";
 import { Stage, Layer, Rect } from "react-konva";
 import { Html } from "react-konva-utils";
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 
 const ModelRelations: FunctionComponent = () => {
+	const divRef: {
+		current: any;
+	} = useRef(null);
 	const [selectedFields, setSelectedFields]: [any, any] = useState([]);
 	const [availableFields, setAvailableFields]: [any, any] = useState([
 		{
@@ -72,6 +76,20 @@ const ModelRelations: FunctionComponent = () => {
 		ev.preventDefault();
 	}
 
+	const mouseLocation = useRef({ x: 0, y: 0 });
+
+	const logMousePosition = (e: any) => {
+		// these are the cordinates of your current pointer position
+		mouseLocation.current.x = e.clientX;
+		mouseLocation.current.y = e.clientY;
+	};
+	useEffect(() => {
+		window.addEventListener("mousemove", logMousePosition);
+		return () => {
+			window.removeEventListener("mousemove", logMousePosition);
+		};
+	}, []);
+
 	function dragStart(e: any, id: any, event?: string) {
 		e.dataTransfer.setData("id", id);
 		e.dataTransfer.setData("event", event || "add");
@@ -109,211 +127,227 @@ const ModelRelations: FunctionComponent = () => {
 			setSelectedFields(modSelectedFields);
 		}
 	}
+
+	const move = (
+		source: any[],
+		destination: any[],
+		droppableSource: Record<string, any>,
+		droppableDestination: Record<string, any>,
+		cord?: boolean
+	) => {
+		const sourceClone = Array.from(source);
+		const destClone = Array.from(destination);
+		const [removed] = sourceClone.splice(droppableSource.index, 1);
+
+		if (cord) {
+			const div = document.getElementById("dropbox");
+			const divRect = div!.getBoundingClientRect();
+			const x = Math.max(0, Math.min(mouseLocation.current.x - divRect.left, divRect.left + divRect.width));
+			const y = Math.max(0, Math.min(mouseLocation.current.y - divRect.top, divRect.top + divRect.height));
+			removed["cord"] = { x, y };
+		}
+
+		destClone.splice(droppableDestination.index, 0, removed);
+
+		const result: Record<string, any> = {};
+		result[droppableSource.droppableId] = sourceClone;
+		result[droppableDestination.droppableId] = destClone;
+
+		return result;
+	};
+
+	const onDragEnd = (result: any) => {
+		const { source, destination } = result;
+		if (!destination) return;
+
+		if (source.droppableId === destination.droppableId) {
+			const items = Array.from(availableFields);
+			const [reorderedItem] = items.splice(source.index, 1);
+			items.splice(destination.index, 0, reorderedItem);
+
+			setAvailableFields(items);
+		} else if (source.droppableId === "availableFields") {
+			let result = move(availableFields, selectedFields, source, destination, true);
+
+			setAvailableFields(result.availableFields);
+			setSelectedFields(result.selectedFields);
+		} else if (source.droppableId === "selectedFields") {
+			let result = move(selectedFields, availableFields, source, destination, true);
+
+			setAvailableFields(result.availableFields);
+			setSelectedFields(result.selectedFields);
+		}
+	};
 	return (
-		<Stage width={window.innerWidth} height={window.innerHeight} ref={stage}>
-			<Layer
-				onWheel={(e) => {
-					// stop default scrolling
-					e.evt.preventDefault();
-
-					var scaleBy = 1.01;
-					var oldScale = stage.current.scaleX();
-					var pointer = stage.current.getPointerPosition();
-
-					var mousePointTo = {
-						x: (pointer.x - stage.current.x()) / oldScale,
-						y: (pointer.y - stage.current.y()) / oldScale,
-					};
-
-					// how to scale? Zoom in? Or zoom out?
-					let direction = e.evt.deltaY > 0 ? 1 : -1;
-
-					// when we zoom on trackpad, e.evt.ctrlKey is true
-					// in that case lets revert direction
-					if (e.evt.ctrlKey) {
-						direction = -direction;
-					}
-
-					var newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-
-					stage.current.scale({ x: newScale, y: newScale });
-
-					var newPos = {
-						x: pointer.x - mousePointTo.x * newScale,
-						y: pointer.y - mousePointTo.y * newScale,
-					};
-					stage.current.position(newPos);
-				}}
-			>
-				<Html
-					divProps={{
-						style: {
-							position: "absolute",
-							top: 10,
-							left: 10,
-							width: "100%",
-							maxHeight: "100%",
-						},
-					}}
-				>
-					<div className="bg-pattern bg-repeat h-full w-full px-10 bg-[#FCFCFF]" style={{ backgroundImage: `url(${backgroundImage})` }}>
-						<p className="flex flex-row h-39 items-center flex-shrink-0 text-gray-400 font-roboto text-26 font-bold mb-3 py-3">
-							<ArrowLeft /> Back
-						</p>
-						<div className="flex flex-row mt-10 w-full h-[86%] gap-3">
-							<div
-								className="inline-flex w-[400px] h-[86vh] py-[25px] px-[30px] pb-[65px] flex-col items-start gap-13 flex-shrink-0 rounded-lg border border-solid border-[#C0E6DD] bg-[#F7FAFF]"
-								onDragOver={(event) => {
-									allowDrop(event);
-								}}
-								onDrop={(event) => {
-									removeSelected(event);
-								}}
-							>
-								<div>
-									<Breadcrumb>
-										<BreadcrumbList>
-											<BreadcrumbItem>
-												<BreadcrumbLink href="/">Home</BreadcrumbLink>
-											</BreadcrumbItem>
-											<BreadcrumbSeparator>
-												<Slash />
-											</BreadcrumbSeparator>
-											<BreadcrumbItem>
-												<BreadcrumbLink href="/components">Components</BreadcrumbLink>
-											</BreadcrumbItem>
-											<BreadcrumbSeparator>
-												<Slash />
-											</BreadcrumbSeparator>
-											<BreadcrumbItem>
-												<BreadcrumbPage>Breadcrumb</BreadcrumbPage>
-											</BreadcrumbItem>
-										</BreadcrumbList>
-									</Breadcrumb>
-								</div>
-								<div className="py-[25px] px-[30px] pl-2 gap-[13px] flex flex-col">
-									<div className="flex flex-row justify-between">
-										<p className="text-blue-900 font-roboto text-[22px] font-semibold">Add Relations</p>
-										<div className="flex w-[102px] h-[32px] gap-[5px]">
-											<JSONIcon />
-											<CheckFileIcon />
-											<CancelFileIcon />
+		<div className="bg-pattern bg-repeat h-full w-full px-10 bg-[#FCFCFF]" style={{ backgroundImage: `url(${backgroundImage})` }}>
+			<p className="flex flex-row h-39 items-center flex-shrink-0 text-gray-400 font-roboto text-26 font-bold mb-3 py-3">
+				<ArrowLeft /> Back
+			</p>
+			<div className="flex flex-row mt-10 w-full h-[86%] gap-3">
+				<DragDropContext onDragEnd={onDragEnd}>
+					<Droppable droppableId="availableFields">
+						{(provided) => {
+							return (
+								<div
+									ref={provided.innerRef}
+									{...provided.droppableProps}
+									className="inline-flex w-[400px] h-[86vh] py-[25px] px-[30px] pb-[65px] flex-col items-start gap-13 flex-shrink-0 rounded-lg border border-solid border-[#C0E6DD] bg-[#F7FAFF]"
+								>
+									<div>
+										<Breadcrumb>
+											<BreadcrumbList>
+												<BreadcrumbItem>
+													<BreadcrumbLink href="/">Home</BreadcrumbLink>
+												</BreadcrumbItem>
+												<BreadcrumbSeparator>
+													<Slash />
+												</BreadcrumbSeparator>
+												<BreadcrumbItem>
+													<BreadcrumbLink href="/components">Components</BreadcrumbLink>
+												</BreadcrumbItem>
+												<BreadcrumbSeparator>
+													<Slash />
+												</BreadcrumbSeparator>
+												<BreadcrumbItem>
+													<BreadcrumbPage>Breadcrumb</BreadcrumbPage>
+												</BreadcrumbItem>
+											</BreadcrumbList>
+										</Breadcrumb>
+									</div>
+									<div className="py-[25px] px-[30px] pl-2 gap-[13px] flex flex-col">
+										<div className="flex flex-row justify-between">
+											<p className="text-blue-900 font-roboto text-[22px] font-semibold">Add Relations</p>
+											<div className="flex w-[102px] h-[32px] gap-[5px]">
+												<JSONIcon />
+												<CheckFileIcon />
+												<CancelFileIcon />
+											</div>
+										</div>
+										<div className="text-gray-500 font-roboto text-xs font-normal leading-22">
+											Drag and Drop a field type to get started. Various Design Elements and Button Elements can also be used to
+											provide more context.
 										</div>
 									</div>
-									<div className="text-gray-500 font-roboto text-xs font-normal leading-22">
-										Drag and Drop a field type to get started. Various Design Elements and Button Elements can also be used to
-										provide more context.
+									<div className="self-stretch flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full my-2 gap-[13px]">
+										<div className="text-green-800 font-sans text-base font-bold leading-5">Filter</div>
+										<div className="flex flex-row justify-start gap-[13px] w-full">
+											<Select label="Select" className="max-w-xs w-24" size="sm" variant="bordered">
+												<SelectItem key="text" value="text">
+													Text
+												</SelectItem>
+												<SelectItem key="textarea" value="textarea">
+													Textarea
+												</SelectItem>
+												<SelectItem key="checkbox" value="checkbox">
+													Checkbox
+												</SelectItem>
+												<SelectItem key="radio" value="radio">
+													Radio Button
+												</SelectItem>
+												<SelectItem key="select" value="select">
+													Dropdown Select
+												</SelectItem>
+												<SelectItem key="date" value="date">
+													Date Picker
+												</SelectItem>
+												<SelectItem key="time" value="time">
+													Time Picker
+												</SelectItem>
+												<SelectItem key="email" value="email">
+													Email
+												</SelectItem>
+												<SelectItem key="password" value="password">
+													Password
+												</SelectItem>
+												<SelectItem key="file" value="file">
+													File Upload
+												</SelectItem>
+												<SelectItem key="number" value="number">
+													Number
+												</SelectItem>
+												<SelectItem key="tel" value="tel">
+													Telephone
+												</SelectItem>
+												<SelectItem key="url" value="url">
+													URL
+												</SelectItem>
+											</Select>
+											<Select label="Select" className="max-w-xs w-24" size="sm" variant="bordered">
+												<SelectItem key="text" value="text">
+													Text
+												</SelectItem>
+												<SelectItem key="textarea" value="textarea">
+													Textarea
+												</SelectItem>
+												<SelectItem key="checkbox" value="checkbox">
+													Checkbox
+												</SelectItem>
+												<SelectItem key="radio" value="radio">
+													Radio Button
+												</SelectItem>
+												<SelectItem key="select" value="select">
+													Dropdown Select
+												</SelectItem>
+												<SelectItem key="date" value="date">
+													Date Picker
+												</SelectItem>
+												<SelectItem key="time" value="time">
+													Time Picker
+												</SelectItem>
+												<SelectItem key="email" value="email">
+													Email
+												</SelectItem>
+												<SelectItem key="password" value="password">
+													Password
+												</SelectItem>
+												<SelectItem key="file" value="file">
+													File Upload
+												</SelectItem>
+												<SelectItem key="number" value="number">
+													Number
+												</SelectItem>
+												<SelectItem key="tel" value="tel">
+													Telephone
+												</SelectItem>
+												<SelectItem key="url" value="url">
+													URL
+												</SelectItem>
+											</Select>
+										</div>
+									</div>
+									<div className="w-full h-[70%] overflow-y-scroll flex flex-col gap-[13px]">
+										<div className="text-green-800 font-sans text-base font-bold leading-5">Existing Models</div>
+										{availableFields.map((item: any, index: number) => {
+											return (
+												<Draggable key={item.id} draggableId={item.id.toString()} index={index}>
+													{(provided: any) => (
+														<div
+															ref={provided.innerRef}
+															{...provided.draggableProps}
+															{...provided.dragHandleProps}
+															className="field w-full h-[46px] p-4 flex items-center gap-2.5 flex-shrink-0 rounded-lg border border-dashed border-[#B79848] bg-[#FFFBEB] text-green-800 font-bold font-sans text-sm justify-start"
+														>
+															<div className="flex flex-row gap-3 w-full">
+																<CarbonIcon /> {item.name}
+															</div>
+														</div>
+													)}
+												</Draggable>
+											);
+										})}
 									</div>
 								</div>
-								<div className="self-stretch flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full my-2 gap-[13px]">
-									<div className="text-green-800 font-sans text-base font-bold leading-5">Filter</div>
-									<div className="flex flex-row justify-start gap-[13px] w-full">
-										<Select label="Select" className="max-w-xs w-24" size="sm" variant="bordered">
-											<SelectItem key="text" value="text">
-												Text
-											</SelectItem>
-											<SelectItem key="textarea" value="textarea">
-												Textarea
-											</SelectItem>
-											<SelectItem key="checkbox" value="checkbox">
-												Checkbox
-											</SelectItem>
-											<SelectItem key="radio" value="radio">
-												Radio Button
-											</SelectItem>
-											<SelectItem key="select" value="select">
-												Dropdown Select
-											</SelectItem>
-											<SelectItem key="date" value="date">
-												Date Picker
-											</SelectItem>
-											<SelectItem key="time" value="time">
-												Time Picker
-											</SelectItem>
-											<SelectItem key="email" value="email">
-												Email
-											</SelectItem>
-											<SelectItem key="password" value="password">
-												Password
-											</SelectItem>
-											<SelectItem key="file" value="file">
-												File Upload
-											</SelectItem>
-											<SelectItem key="number" value="number">
-												Number
-											</SelectItem>
-											<SelectItem key="tel" value="tel">
-												Telephone
-											</SelectItem>
-											<SelectItem key="url" value="url">
-												URL
-											</SelectItem>
-										</Select>
-										<Select label="Select" className="max-w-xs w-24" size="sm" variant="bordered">
-											<SelectItem key="text" value="text">
-												Text
-											</SelectItem>
-											<SelectItem key="textarea" value="textarea">
-												Textarea
-											</SelectItem>
-											<SelectItem key="checkbox" value="checkbox">
-												Checkbox
-											</SelectItem>
-											<SelectItem key="radio" value="radio">
-												Radio Button
-											</SelectItem>
-											<SelectItem key="select" value="select">
-												Dropdown Select
-											</SelectItem>
-											<SelectItem key="date" value="date">
-												Date Picker
-											</SelectItem>
-											<SelectItem key="time" value="time">
-												Time Picker
-											</SelectItem>
-											<SelectItem key="email" value="email">
-												Email
-											</SelectItem>
-											<SelectItem key="password" value="password">
-												Password
-											</SelectItem>
-											<SelectItem key="file" value="file">
-												File Upload
-											</SelectItem>
-											<SelectItem key="number" value="number">
-												Number
-											</SelectItem>
-											<SelectItem key="tel" value="tel">
-												Telephone
-											</SelectItem>
-											<SelectItem key="url" value="url">
-												URL
-											</SelectItem>
-										</Select>
-									</div>
-								</div>
-								<div className="w-full h-[70%] overflow-y-scroll flex flex-col gap-[13px]">
-									<div className="text-green-800 font-sans text-base font-bold leading-5">Existing Models</div>
-									{availableFields.map((e: any) => {
-										return (
-											<Button
-												className="field w-full h-[46px] p-4 flex items-center gap-2.5 flex-shrink-0 rounded-lg border border-dashed border-[#B79848] bg-[#FFFBEB] text-green-800 font-bold font-sans text-sm justify-start"
-												disableAnimation={false}
-												disableRipple={true}
-												draggable={"true"}
-												onDragStart={(event) => {
-													dragStart(event, e.id);
-												}}
-											>
-												<div className="flex flex-row gap-3 w-full">
-													<CarbonIcon /> {e.name}
-												</div>
-											</Button>
-										);
-									})}
-								</div>
-							</div>
-							<div className="flex-grow h-full flex-shrink-0 rounded-lg p-20 gap-[20%] flex flex-row items-center">
+							);
+						}}
+					</Droppable>
+					<Droppable droppableId="selectedFields">
+						{(provided: any) => (
+							<div
+								ref={provided.innerRef}
+								{...provided.droppableProps}
+								className="flex-grow h-full flex-shrink-0 rounded-lg gap-[20%] relative"
+								id="dropbox"
+							>
 								<div className="flex flex-col w-[286px] h-[413px] p-[24px] items-center rounded-lg border border-solid border-gray-300 bg-white shadow-md gap-[11px]">
 									<div>
 										<PlantImage />
@@ -350,26 +384,13 @@ const ModelRelations: FunctionComponent = () => {
 										</div>
 									</div>
 								</div>
-								<div className="flex flex-col justify-between h-full w-full items-start">
-									{!selectedFields[0] ? (
+								{(selectedFields || []).map((e: any) => {
+									return (
 										<div
-											className="flex flex-col w-[20vh] h-[20vh] justify-center items-center rounded-lg border-4 border-dashed border-[#7FBCA6] bg-opacity-50 shadow-md p-[24px]"
-											onDragStart={(event) => {
-												dragStart(event, 0, "move");
-											}}
-											onDragOver={(event) => {
-												allowDrop(event);
-											}}
-											onDrop={(event) => {
-												dropOnChild(event, 0);
-											}}
+											className={`flex flex-col w-[20vh] h-[20vh] items-center rounded-lg border border-solid border-gray-300 bg-white shadow-md gap-[11px] p-[24px] absolute top-[${e.cord.y}px] left-[${e.cord.x}px]`}
 										>
-											<p className="text-[#CECECE] text-center font-roboto text-[18px] font-semibold">Choose Child Template</p>
-										</div>
-									) : (
-										<div className="flex flex-col w-[20vh] h-[20vh] items-center rounded-lg border border-solid border-gray-300 bg-white shadow-md gap-[11px] p-[24px]">
 											<div>
-												<h2 className="text-green-800 font-roboto text-[14px] font-bold">{selectedFields[0].name}</h2>
+												<h2 className="text-green-800 font-roboto text-[14px] font-bold">{e.name}</h2>
 												<div className="flex flex-row gap-2 justify-start items-center">
 													<div className="flex flex-row gap-2 justify-start items-center text-[9px] text-[#81B97C] font-medium">
 														<GreenKeyIcon /> Type
@@ -397,108 +418,14 @@ const ModelRelations: FunctionComponent = () => {
 												</div>
 											</div>
 										</div>
-									)}
-									{!selectedFields[1] ? (
-										<div
-											className="flex flex-col w-[20vh] h-[20vh] justify-center items-center rounded-lg border-4 border-dashed border-[#7FBCA6] bg-opacity-50 shadow-md p-[24px]"
-											onDragStart={(event) => {
-												dragStart(event, 0, "move");
-											}}
-											onDragOver={(event) => {
-												allowDrop(event);
-											}}
-											onDrop={(event) => {
-												dropOnChild(event, 0);
-											}}
-										>
-											<p className="text-[#CECECE] text-center font-roboto text-[18px] font-semibold">Choose Child Template</p>
-										</div>
-									) : (
-										<div className="flex flex-col w-[20vh] h-[20vh] items-center rounded-lg border border-solid border-gray-300 bg-white shadow-md gap-[11px] p-[24px]">
-											<div>
-												<h2 className="text-green-800 font-roboto text-[14px] font-bold">{selectedFields[1].name}</h2>
-												<div className="flex flex-row gap-2 justify-start items-center">
-													<div className="flex flex-row gap-2 justify-start items-center text-[9px] text-[#81B97C] font-medium">
-														<GreenKeyIcon /> Type
-													</div>
-													<div className="flex flex-row gap-2 justify-start items-center text-[9px] text-[#73C5D0] font-medium">
-														<BlueKeyIcon /> Style
-													</div>
-													<div className="flex flex-row gap-2 justify-start items-center text-[9px] text-[#B9877C] font-medium">
-														<RedKeyIcon /> Group
-													</div>
-												</div>
-											</div>
-											<div className="flex flex-row flex-wrap max-w-[262px] gap-[6px]">
-												<div className="flex-auto flex w-full h-[26px] p-[15px] items-center gap-[10px] flex-shrink-0 rounded-md border border-dashed border-[#9A5945] bg-[#FFF3EB]">
-													<FormSubmitRightArrowIcon />
-													<p className="text-[#9A5945] font-merriweather-sans text-[12px] font-bold">Collection 1</p>
-												</div>
-												<div className="flex-auto flex w-full h-[26px] p-[15px] items-center gap-[10px] flex-shrink-0 rounded-md border border-dashed border-[#9A5945] bg-[#FFF3EB]">
-													<BrownCancelIcon />{" "}
-													<p className="text-[#9A5945] font-merriweather-sans text-[12px] font-bold">Collection 2</p>
-												</div>
-												<div className="flex-auto flex w-full h-[26px] p-[15px] items-center gap-[10px] flex-shrink-0 rounded-md border border-dashed border-[#92A1D7] bg-[#B9C5F0]">
-													<WhiteCancelIcon />{" "}
-													<p className="text-[#F4F4F4] font-merriweather-sans text-[12px] font-bold">Collection 3</p>
-												</div>
-											</div>
-										</div>
-									)}
-									{!selectedFields[2] ? (
-										<div
-											className="flex flex-col w-[20vh] h-[20vh] justify-center items-center rounded-lg border-4 border-dashed border-[#7FBCA6] bg-opacity-50 shadow-md p-[24px]"
-											onDragStart={(event) => {
-												dragStart(event, 0, "move");
-											}}
-											onDragOver={(event) => {
-												allowDrop(event);
-											}}
-											onDrop={(event) => {
-												dropOnChild(event, 0);
-											}}
-										>
-											<p className="text-[#CECECE] text-center font-roboto text-[18px] font-semibold">Choose Child Template</p>
-										</div>
-									) : (
-										<div className="flex flex-col w-[20vh] h-[20vh] items-center rounded-lg border border-solid border-gray-300 bg-white shadow-md gap-[11px] p-[24px]">
-											<div>
-												<h2 className="text-green-800 font-roboto text-[14px] font-bold">{selectedFields[2].name}</h2>
-												<div className="flex flex-row gap-2 justify-start items-center">
-													<div className="flex flex-row gap-2 justify-start items-center text-[9px] text-[#81B97C] font-medium">
-														<GreenKeyIcon /> Type
-													</div>
-													<div className="flex flex-row gap-2 justify-start items-center text-[9px] text-[#73C5D0] font-medium">
-														<BlueKeyIcon /> Style
-													</div>
-													<div className="flex flex-row gap-2 justify-start items-center text-[9px] text-[#B9877C] font-medium">
-														<RedKeyIcon /> Group
-													</div>
-												</div>
-											</div>
-											<div className="flex flex-row flex-wrap max-w-[262px] gap-[6px]">
-												<div className="flex-auto flex w-full h-[26px] p-[15px] items-center gap-[10px] flex-shrink-0 rounded-md border border-dashed border-[#9A5945] bg-[#FFF3EB]">
-													<FormSubmitRightArrowIcon />
-													<p className="text-[#9A5945] font-merriweather-sans text-[12px] font-bold">Collection 1</p>
-												</div>
-												<div className="flex-auto flex w-full h-[26px] p-[15px] items-center gap-[10px] flex-shrink-0 rounded-md border border-dashed border-[#9A5945] bg-[#FFF3EB]">
-													<BrownCancelIcon />{" "}
-													<p className="text-[#9A5945] font-merriweather-sans text-[12px] font-bold">Collection 2</p>
-												</div>
-												<div className="flex-auto flex w-full h-[26px] p-[15px] items-center gap-[10px] flex-shrink-0 rounded-md border border-dashed border-[#92A1D7] bg-[#B9C5F0]">
-													<WhiteCancelIcon />{" "}
-													<p className="text-[#F4F4F4] font-merriweather-sans text-[12px] font-bold">Collection 3</p>
-												</div>
-											</div>
-										</div>
-									)}
-								</div>
+									);
+								})}
 							</div>
-						</div>
-					</div>
-				</Html>
-			</Layer>
-		</Stage>
+						)}
+					</Droppable>
+				</DragDropContext>
+			</div>
+		</div>
 	);
 };
 
