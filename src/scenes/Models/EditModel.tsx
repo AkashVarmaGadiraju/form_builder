@@ -828,6 +828,9 @@ const EditModel: FunctionComponent = () => {
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                             ref={provided.innerRef}
+							onClick={() => {
+								setChosenField(e);
+							}}
                           >
                             <div className="flex flex-row gap-3 w-full">
                               <CarbonIcon /> {e.name}
