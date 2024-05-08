@@ -42,6 +42,7 @@ import { ReactComponent as RowIcon } from "../../assets/Icon.svg";
 import { ReactComponent as DocumentIcon } from "../../assets/FileText.svg";
 import { Label } from "@radix-ui/react-select";
 import { CreateButton } from "../../components/util-components/CreateButton";
+import { cn } from "../../components/util-components/utils";
 
 export function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -163,7 +164,20 @@ const FieldGroup: FunctionComponent = () => {
       case "name":
         return field.name;
       case "fields":
-        let categories = ["green", "geekblue"];
+        let categories = [
+          "green",
+          "geekblue",
+          "green",
+          "geekblue",
+          "green",
+          "geekblue",
+          "green",
+          "geekblue",
+          "green",
+          "geekblue",
+          "green",
+          "geekblue",
+        ];
         if (field.selectedFields) {
           categories = [];
           for (let category in field.selectedFields) {
@@ -173,7 +187,7 @@ const FieldGroup: FunctionComponent = () => {
           }
         }
         return (
-          <div className="flex flex-row gap-3 max-w-[100%] w-full overflow-x-scroll flex-nowrap">
+          <div className="flex flex-row gap-3 w-[400px] overflow-x-scroll styled-scrollbar">
             {categories.map((e: string) => (
               <div className="border-[#B7EB8F] bg-[#F6FFED] border-1 px-2 py-1 rounded-md ">
                 <p className="text-[#52C41A] whitespace-nowrap">
@@ -495,6 +509,10 @@ const FieldGroup: FunctionComponent = () => {
                     <TableColumn
                       key={column.uid}
                       align={column.uid === "actions" ? "center" : "start"}
+                      className={cn(
+                        column.name === "Category" && "w-[400px]",
+                        column.name === "Created At" && "w-[10%]"
+                      )}
                       allowsSorting={column.sortable}
                     >
                       {column.name}

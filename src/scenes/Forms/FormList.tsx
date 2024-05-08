@@ -259,7 +259,7 @@ const FormList: FunctionComponent = () => {
   console.log(users.length);
   let tableData = [];
   return (
-    <main className="w-[90%] h-[100%] flex flex-col items-start justify-start box-border max-w-full mx-auto pb-auto pt-16 overflow-y-auto scrollbar-hide">
+    <main className="w-[90%] h-[100%] flex flex-col items-start justify-start box-border max-w-full mx-auto pb-auto pt-16 overflow-y-auto styled-scrollbar">
       <section className="self-stretch flex flex-col items-start justify-start gap-[21px] max-w-full h-[95%]">
         <div className="self-stretch flex flex-col items-start justify-start gap-[17px] max-w-full text-left text-11xl text-darkslateblue font-roboto">
           <div className="flex flex-col font-merriweather-sans">

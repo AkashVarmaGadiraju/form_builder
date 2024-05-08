@@ -30,6 +30,7 @@ import { ReactComponent as EditIcon } from "../../assets/akar-icons_edit.svg";
 import { ReactComponent as RowIcon } from "../../assets/Icon.svg";
 import { CreateButton } from "../../components/util-components/CreateButton";
 import { useNavigate } from "react-router-dom";
+import { cn } from "../../components/util-components/utils";
 
 export function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -155,7 +156,20 @@ const Models: FunctionComponent = () => {
       case "name":
         return field.name;
       case "tags":
-        let categories = ["green", "geekblue"];
+        let categories = [
+          "green",
+          "geekblue",
+          "green",
+          "geekblue",
+          "green",
+          "geekblue",
+          "green",
+          "geekblue",
+          "green",
+          "geekblue",
+          "green",
+          "geekblue",
+        ];
         if (field.tags) {
           categories = [];
           for (let tags in field.tags) {
@@ -165,7 +179,7 @@ const Models: FunctionComponent = () => {
           }
         }
         return (
-          <div className="flex flex-row gap-3 max-w-[100%] w-full overflow-x-scroll">
+          <div className="flex flex-row gap-3 w-[400px] overflow-x-scroll styled-scrollbar">
             {categories.map((e: string) => (
               <div className="border-[#B7EB8F] bg-[#F6FFED] border-1 px-2 py-1 rounded-md">
                 <p className="text-[#52C41A]">{capitalize(e)}</p>
@@ -483,6 +497,10 @@ const Models: FunctionComponent = () => {
                       key={column.uid}
                       align={column.uid === "actions" ? "center" : "start"}
                       allowsSorting={column.sortable}
+                      className={cn(
+                        column.name === "Category" && "w-[400px]",
+                        column.name === "Created At" && "w-[10%]"
+                      )}
                     >
                       {column.name}
                     </TableColumn>
