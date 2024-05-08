@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   Check,
   ChevronDown,
+  CircleHelp,
   Home,
   LucideIcon,
   LucideProps,
@@ -378,33 +379,19 @@ const EditModel: FunctionComponent = () => {
               }}
             </Droppable>
           ) : (
-            <div className="inline-flex w-[400px] h-full py-[25px] px-[30px] pb-[65px] flex-col items-start gap-13 flex-shrink-0 rounded-lg border border-solid border-[#C0E6DD] bg-[#F7FAFF]">
+            <div className="inline-flex w-[400px] h-full py-[25px] px-[30px] pb-[65px] flex-col items-start gap-13 flex-shrink-0 rounded-lg border border-solid border-[#C0E6DD] bg-[#F7FAFF] overflow-y-auto">
               <div>
-                <Breadcrumb>
-                  <BreadcrumbList>
-                    <BreadcrumbItem>
-                      <BreadcrumbLink href="/">Home</BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator>
-                      <Slash />
-                    </BreadcrumbSeparator>
-                    <BreadcrumbItem>
-                      <BreadcrumbLink href="/components">
-                        Components
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator>
-                      <Slash />
-                    </BreadcrumbSeparator>
-                    <BreadcrumbItem>
-                      <BreadcrumbPage>Breadcrumb</BreadcrumbPage>
-                    </BreadcrumbItem>
-                  </BreadcrumbList>
-                </Breadcrumb>
+                <CustomBreadcrumb
+                  items={[
+                    { icon: HomeIcon as LucideIcon, href: "/" },
+                    { title: "Components", href: "/components" },
+                    { title: "Breadcrumb", href: "/breadcrumb" },
+                  ]}
+                />
               </div>
-              <div className="py-[25px] px-[30px] pl-2 gap-[13px] flex flex-col">
+              <div className="py-[25px] px-[30px] pl-2 gap-[13px] flex flex-col font-merriweather-sans">
                 <div className="flex flex-row justify-between">
-                  <p className="text-blue-900 font-roboto text-[22px] font-semibold">
+                  <p className="text-blue-900 text-[20px] font-semibold">
                     Insert Fields
                   </p>
                   <div className="flex w-[102px] h-[32px] gap-[5px]">
@@ -413,7 +400,7 @@ const EditModel: FunctionComponent = () => {
                     <CancelFileIcon />
                   </div>
                 </div>
-                <div className="text-gray-500 font-roboto text-xs font-normal leading-22">
+                <div className="text-gray-500 font-inherit text-[13px] font-normal leading-22">
                   Drag and Drop a field type to get started. Various Design
                   Elements and Button Elements can also be used to provide more
                   context.
@@ -423,15 +410,16 @@ const EditModel: FunctionComponent = () => {
                 <div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
                   <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
                     <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-                      <div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-                        Field Name
+                      <div className="relative text-sm leading-[20px] font-noto-sans text-[#407062] font-bold text-left flex items-center gap-1">
+                        Field Name{" "}
+                        <CircleHelp className="w-4 h-4 stroke-[#407062]" />
                       </div>
                       <div className="self-stretch shadow-[0px_1px_2px_rgba(16,_24,_40,_0.05)] rounded-lg box-border overflow-hidden flex flex-row items-center justify-start py-2 px-[13px] gap-[8px] max-w-full border-[1px] border-solid  bg-[#E9EEF6] border-[#C3D6F4] mb-2">
                         <Input
                           type="text"
                           placeholder="Field 1"
                           id="nameInput"
-                          className="!outline-none focus:ring-0 w-full [border:none] [outline:none] bg-[transparent] h-6 flex-1 flex flex-row items-center justify-start font-merriweather-sans text-sm text-darkslateblue min-w-[208px] max-w-full"
+                          className="!outline-none focus:ring-0 w-full [border:none] [outline:none] bg-[transparent] h-6 flex-1 flex flex-row items-center justify-start font-merriweather-sans text-sm text-darkslateblue min-w-[208px] max-w-full focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                         <img
                           className="h-4 w-4 relative"
@@ -445,15 +433,16 @@ const EditModel: FunctionComponent = () => {
                 <div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
                   <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
                     <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-                      <div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-                        Place Holder Text
+                      <div className="relative text-sm leading-[20px] font-noto-sans text-[#407062] font-bold text-left flex items-center gap-1">
+                        Place Holder Text{" "}
+                        <CircleHelp className="w-4 h-4 stroke-[#407062]" />
                       </div>
                       <div className="self-stretch shadow-[0px_1px_2px_rgba(16,_24,_40,_0.05)] rounded-lg  box-border overflow-hidden flex flex-row items-center justify-start py-2 px-[13px] gap-[8px] max-w-full border-[1px] border-solid  bg-[#E9EEF6] border-[#C3D6F4] mb-2">
                         <Input
                           type="text"
                           placeholder="Field 1"
                           id="nameInput"
-                          className="!outline-none focus:ring-0 w-full [border:none] [outline:none] bg-[transparent] h-6 flex-1 flex flex-row items-center justify-start font-merriweather-sans text-sm text-darkslateblue min-w-[208px] max-w-full"
+                          className="!outline-none focus:ring-0 w-full [border:none] [outline:none] bg-[transparent] h-6 flex-1 flex flex-row items-center justify-start font-merriweather-sans text-sm text-darkslateblue min-w-[208px] max-w-full focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                         <img
                           className="h-4 w-4 relative"
@@ -468,16 +457,15 @@ const EditModel: FunctionComponent = () => {
               <div className="self-stretch flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3">
                 <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
                   <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-                    <div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-                      Instructions
+                    <div className="relative text-sm leading-[20px] font-noto-sans text-[#407062] font-bold text-left  flex items-center gap-1">
+                      Instructions{" "}
+                      <CircleHelp className="w-4 h-4 stroke-[#407062]" />
                     </div>
                     <div className="self-stretch shadow-[0px_1px_2px_rgba(16,_24,_40,_0.05)] rounded-lg bg-[#E9EEF6] box-border overflow-hidden flex flex-row items-center justify-start py-2 px-[13px] gap-[8px] max-w-full border-[1px] border-solid border-[#C3D6F4] mb-2">
-                      <Input
-                        type="text"
+                      <Textarea
                         placeholder="Hello World"
-                        value="Hello World"
                         id="nameInput"
-                        className="!outline-none focus:ring-0 w-full [border:none] [outline:none] bg-[transparent] h-[215px] flex-1 flex flex-row items-center justify-start font-merriweather-sans text-sm text-darkslateblue min-w-[208px] max-w-full"
+                        className="!outline-none w-full [border:none] [outline:none] bg-[transparent] flex-1 flex flex-row items-center justify-start font-merriweather-sans text-sm text-darkslateblue min-w-[208px] max-w-full focus:ring-0 focus:ring-offset-0 ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                     </div>
                   </div>
@@ -486,26 +474,26 @@ const EditModel: FunctionComponent = () => {
               <div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3">
                 <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
                   <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-                    <div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-                      Range
+                    <div className="relative text-sm leading-[20px] font-noto-sans text-[#407062] font-bold text-left flex items-center gap-1">
+                      Range <CircleHelp className="w-4 h-4 stroke-[#407062]" />
                     </div>
                     <div className="flex flex-row items-center justify-start py-2 gap-[8px]">
                       <Input
                         type="text"
                         placeholder="Min"
                         id="nameInput"
-                        className="w-[30%] rounded-md border border-solid border-blue-200 bg-blue-50 shadow-xs"
+                        className="w-[30%] rounded-md border border-solid border-blue-200 bg-blue-50 shadow-xs focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
 
                       <Input
                         type="text"
                         placeholder="Max"
                         id="nameInput"
-                        className="w-[30%] rounded-md border border-solid border-blue-200 bg-blue-50 shadow-xs"
+                        className="w-[30%] rounded-md border border-solid border-blue-200 bg-blue-50 shadow-xs focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
 
                       <Select
-                        label="Select"
+                        placeholder="Select"
                         className="max-w-xs w-[30%]"
                         size="sm"
                         variant="bordered"
@@ -558,11 +546,12 @@ const EditModel: FunctionComponent = () => {
                 <div className="self-stretch flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
                   <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
                     <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-                      <div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-                        Input Type
+                      <div className="relative text-sm leading-[20px] font-noto-sans text-[#407062] font-bold text-left  flex items-center gap-1">
+                        Input Type{" "}
+                        <CircleHelp className="w-4 h-4 stroke-[#407062]" />
                       </div>
                       <Select
-                        label="Select"
+                        placeholder="Select"
                         className="max-w-xs w-full"
                         size="sm"
                         variant="bordered"
@@ -613,11 +602,12 @@ const EditModel: FunctionComponent = () => {
                 <div className="self-stretch flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
                   <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
                     <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-                      <div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-                        Field
+                      <div className="relative text-sm leading-[20px] font-noto-sans text-[#407062] font-bold text-left flex items-center gap-1">
+                        Field{" "}
+                        <CircleHelp className="w-4 h-4 stroke-[#407062]" />
                       </div>
                       <Select
-                        label="Select"
+                        placeholder="Select"
                         className="max-w-xs w-full"
                         size="sm"
                         variant="bordered"
@@ -663,7 +653,7 @@ const EditModel: FunctionComponent = () => {
                         </SelectItem>
                       </Select>
                       <Select
-                        label="Select"
+                        placeholder="Select"
                         className="max-w-xs w-full"
                         size="sm"
                         variant="bordered"
@@ -716,8 +706,9 @@ const EditModel: FunctionComponent = () => {
                 <div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
                   <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
                     <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-                      <div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-                        Field
+                      <div className="relative text-sm leading-[20px] font-noto-sans text-[#407062] font-bold text-left  flex items-center gap-1">
+                        Field{" "}
+                        <CircleHelp className="w-4 h-4 stroke-[#407062]" />
                       </div>
                       <div className="flex items-center space-x-2">
                         <Checkbox id="terms" className="accent-[#C3D6F4]" />
@@ -752,11 +743,12 @@ const EditModel: FunctionComponent = () => {
                 <div className="self-stretch h-[62.8px] flex flex-col items-start justify-start pt-0 px-0 pb-0 box-border max-w-full mb-3 w-[48%]">
                   <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
                     <div className="self-stretch flex flex-col items-start justify-start gap-[6px] max-w-full">
-                      <div className="relative text-sm leading-[20px] font-noto-sans text-darkslateblue text-left inline-block min-w-[40px]">
-                        Country Pin
+                      <div className="relative text-sm leading-[20px] font-noto-sans text-[#407062] font-bold text-left flex items-center gap-1">
+                        Country Pin{" "}
+                        <CircleHelp className="w-4 h-4 stroke-[#407062]" />
                       </div>
                       <Select
-                        label="Select"
+                        placeholder="Select"
                         className="max-w-xs w-full"
                         size="sm"
                         variant="bordered"
@@ -828,9 +820,9 @@ const EditModel: FunctionComponent = () => {
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                             ref={provided.innerRef}
-							onClick={() => {
-								setChosenField(e);
-							}}
+                            onClick={() => {
+                              setChosenField(e);
+                            }}
                           >
                             <div className="flex flex-row gap-3 w-full">
                               <CarbonIcon /> {e.name}
